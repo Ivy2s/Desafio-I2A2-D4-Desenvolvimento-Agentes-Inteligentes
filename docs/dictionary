@@ -1,0 +1,20 @@
+# app.py
+É o ponto de entrada.
+
+## agents
+Criação do agente e armazenamento do system prompt 
+
+## tools
+Ferramentas de pipeline de dados na qual o agente irá chamar 
+
+## services
+Serviços auxiliares que podem ajudar o sistema 
+
+## frontend
+Interface 
+
+## tests
+Testes do agente 
+
+## docs
+Toda documentação necessária 
