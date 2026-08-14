@@ -18,14 +18,32 @@ def create_agent():
         func=query_data,
         name="query_data",
         description="""
-        Consulta os dados de notas fiscais.
+        Consulta dados de qualquer dataset carregado.
 
-        Utilize esta ferramenta quando a pergunta do usuário
-        exigir informações presentes nos datasets.
+        IMPORTANTE:
+        Antes de utilizar esta ferramenta, consulte describe_data para
+        identificar os datasets e as colunas reais disponíveis.
 
-        A consulta deve especificar a operação, dataset e,
-        quando necessário, período, agrupamento, métrica,
-        agregação, ordenação e limite.
+        NUNCA invente nomes de colunas ou datasets.
+
+        Os argumentos dataset, group_by, metric e sort devem utilizar
+        EXATAMENTE os nomes retornados por describe_data.
+
+        A ferramenta suporta:
+        - count: contagem de registros;
+        - list: listagem de registros;
+        - aggregate: agregações como sum, mean, min e max.
+
+        Para aggregate, informe:
+        - dataset
+        - group_by
+        - metric
+        - aggregation
+        - sort, quando necessário
+        - limit, quando necessário
+
+        O sistema pode receber qualquer arquivo ZIP contendo um ou
+        vários CSVs. Não assuma uma estrutura específica de dados.
         """,
         args_schema=DataQuery,
     )
@@ -34,15 +52,22 @@ def create_agent():
         func=describe_data,
         name="describe_data",
         description="""
-        Retorna informações sobre os datasets disponíveis,
-        incluindo tabelas, colunas e informações relevantes
-        para realizar consultas.
+        Consulta o schema dos dados atualmente carregados.
+
+        Retorna os datasets disponíveis, número de registros, nomes das
+        colunas, tipos de dados e amostras dos registros.
+
+        Utilize esta ferramenta ANTES de query_data para descobrir quais
+        datasets e colunas devem ser utilizados.
+
+        Os nomes dos datasets e colunas são dinâmicos e podem variar
+        completamente entre diferentes arquivos ZIP.
         """,
     )
 
     tools = [
-        query_tool,
         describe_tool,
+        query_tool,
     ]
 
     llm_with_tools = llm.bind_tools(tools)
