@@ -1,4 +1,4 @@
-# Atlas frontend
+# Data Assistent frontend
 
 Frontend independente para explorar datasets CSV e demonstrar consultas em linguagem natural. A UI não inicializa nem depende dos serviços Python.
 
