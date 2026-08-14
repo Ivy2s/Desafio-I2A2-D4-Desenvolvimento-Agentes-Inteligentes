@@ -1,14 +1,40 @@
-def query_data(query):
-    """
-    Executa uma consulta nos dados.
+from typing import Optional
 
-    Implementação temporária.
-    Será substituída pelo DataManager do Pipeline.
+from pydantic import BaseModel
+
+
+class DataQuery(BaseModel):
+    operation: str
+    dataset: str
+    periodo: Optional[str] = None
+    group_by: Optional[str] = None
+    metric: Optional[str] = None
+    aggregation: Optional[str] = None
+    sort: Optional[str] = None
+    limit: Optional[int] = None
+
+
+def query_data(query: DataQuery):
     """
-    raise NotImplementedError
+    Executa uma consulta estruturada nos dados.
+
+    Esta implementação é temporária.
+    Será substituída pela integração com o DataManager
+    desenvolvido pelo responsável pelo Pipeline.
+    """
+
+    raise NotImplementedError(
+        "DataManager ainda não integrado."
+    )
+
 
 def describe_data():
     """
     Retorna informações sobre os datasets disponíveis.
+
+    Implementação temporária.
     """
-    raise NotImplementedError
+    
+    raise NotImplementedError(
+        "DataManager ainda não integrado."
+    )
