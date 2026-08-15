@@ -1,62 +1,24 @@
+import pytest
+
 from agents.csv_agent import create_agent
-from tools.data_tools import query_data, describe_data, DataQuery
 
 
-agent = create_agent()
+def test_agent_factory_requires_primary_key_only_when_called(monkeypatch):
+    monkeypatch.setattr("agents.csv_agent.GOOGLE_API_KEY", None)
+    monkeypatch.setattr("agents.csv_agent.AI_PROVIDER", "gemini")
+    with pytest.raises(RuntimeError, match="gemini"):
+        create_agent()
 
-question = (
-    "Quais são os 5 fornecedores com maior valor total?"
-)
 
-messages = [question]
+def test_agent_factory_supports_groq_fallback(monkeypatch):
+    import agents.csv_agent as csv_agent
+    import services.config as config
 
-for step in range(5):
+    monkeypatch.setattr(csv_agent, "AI_PROVIDER", "groq")
+    monkeypatch.setattr(config, "GROQ_API_KEY", "groq-test-key")
+    monkeypatch.setattr(config, "GROQ_MODEL", "llama-3.3-70b-versatile")
+    monkeypatch.setattr(csv_agent, "GROQ_API_KEY", "groq-test-key")
 
-    response = agent.invoke(messages)
+    agent = create_agent()
 
-    print(f"\n=== ETAPA {step + 1} ===")
-
-    # Agente terminou
-    if not response.tool_calls:
-        print("\n=== RESPOSTA FINAL ===")
-        print(response.content)
-        break
-
-    print("=== TOOL CALL ===")
-    print(response.tool_calls)
-
-    # Adiciona resposta do agente ao histórico
-    messages.append(response)
-
-    # Executa as ferramentas solicitadas
-    for tool_call in response.tool_calls:
-
-        tool_name = tool_call["name"]
-
-        if tool_name == "describe_data":
-
-            tool_result = describe_data()
-
-        elif tool_name == "query_data":
-
-            query = DataQuery(**tool_call["args"])
-            tool_result = query_data(query)
-
-        else:
-            raise ValueError(
-                f"Tool desconhecida: {tool_name}"
-            )
-
-        print("\n=== RESULTADO DA TOOL ===")
-        print(tool_result)
-
-        messages.append(
-            {
-                "role": "tool",
-                "content": str(tool_result),
-                "tool_call_id": tool_call["id"],
-            }
-        )
-
-else:
-    print("\nO agente atingiu o limite de etapas.")
+    assert agent is not None

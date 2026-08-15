@@ -1,75 +1,73 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.tools import StructuredTool
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 
-from services.config import GOOGLE_API_KEY
-from agents.prompts import SYSTEM_PROMPT
-from tools.data_tools import DataQuery, query_data, describe_data
+from pipeline.data_manager import DataManager
+from services.config import (
+    AGENT_REQUEST_TIMEOUT_SECONDS,
+    AGENT_RETRIES,
+    AI_PROVIDER,
+    GEMINI_MODEL,
+    GOOGLE_API_KEY,
+    GROQ_API_KEY,
+    GROQ_MODEL,
+)
+from tools.data_tools import DataQuery, describe_data, query_data
 
 
-def create_agent():
-
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
-        temperature=0,
-        google_api_key=GOOGLE_API_KEY,
-    )
-
+def build_tools(data_manager: DataManager) -> list[StructuredTool]:
     query_tool = StructuredTool.from_function(
-        func=query_data,
+        func=lambda **kwargs: query_data(DataQuery.model_validate(kwargs), data_manager),
         name="query_data",
-        description="""
-        Consulta dados de qualquer dataset carregado.
-
-        IMPORTANTE:
-        Antes de utilizar esta ferramenta, consulte describe_data para
-        identificar os datasets e as colunas reais disponíveis.
-
-        NUNCA invente nomes de colunas ou datasets.
-
-        Os argumentos dataset, group_by, metric e sort devem utilizar
-        EXATAMENTE os nomes retornados por describe_data.
-
-        A ferramenta suporta:
-        - count: contagem de registros;
-        - list: listagem de registros;
-        - aggregate: agregações como sum, mean, min e max.
-
-        Para aggregate, informe:
-        - dataset
-        - group_by
-        - metric
-        - aggregation
-        - sort, quando necessário
-        - limit, quando necessário
-
-        O sistema pode receber qualquer arquivo ZIP contendo um ou
-        vários CSVs. Não assuma uma estrutura específica de dados.
-        """,
+        description=(
+            "Consulta dados carregados. Consulte describe_data antes, "
+            "nunca invente datasets ou colunas e use count, list ou aggregate."
+        ),
         args_schema=DataQuery,
     )
-
     describe_tool = StructuredTool.from_function(
-        func=describe_data,
+        func=lambda: describe_data(data_manager),
         name="describe_data",
-        description="""
-        Consulta o schema dos dados atualmente carregados.
-
-        Retorna os datasets disponíveis, número de registros, nomes das
-        colunas, tipos de dados e amostras dos registros.
-
-        Utilize esta ferramenta ANTES de query_data para descobrir quais
-        datasets e colunas devem ser utilizados.
-
-        Os nomes dos datasets e colunas são dinâmicos e podem variar
-        completamente entre diferentes arquivos ZIP.
-        """,
+        description=(
+            "Retorna datasets, número de registros, colunas, tipos e amostras. "
+            "Use antes de query_data."
+        ),
     )
+    return [describe_tool, query_tool]
 
-    tools = [
-        describe_tool,
-        query_tool,
-    ]
 
-    llm_with_tools = llm.bind_tools(tools)
+def create_agent(
+    data_manager: DataManager | None = None,
+    tools: list[StructuredTool] | None = None,
+):
+    """Cria o modelo com ferramentas ligadas ao DataManager da sessão."""
+    api_key, model = _selected_credentials()
+    if not api_key:
+        raise RuntimeError(f"Chave não configurada para o provedor {AI_PROVIDER}")
 
-    return llm_with_tools
+    manager = data_manager or DataManager()
+    bound_tools = tools or build_tools(manager)
+    if AI_PROVIDER == "groq":
+        llm = ChatGroq(
+            model=model,
+            temperature=0,
+            api_key=api_key,
+            timeout=AGENT_REQUEST_TIMEOUT_SECONDS,
+            max_retries=AGENT_RETRIES,
+        )
+    else:
+        llm = ChatGoogleGenerativeAI(
+            model=model,
+            temperature=0,
+            google_api_key=api_key,
+            request_timeout=AGENT_REQUEST_TIMEOUT_SECONDS,
+            retries=AGENT_RETRIES,
+            thinking_budget=0,
+        )
+    return llm.bind_tools(bound_tools)
+
+
+def _selected_credentials() -> tuple[str | None, str]:
+    if AI_PROVIDER == "groq":
+        return GROQ_API_KEY, GROQ_MODEL
+    return GOOGLE_API_KEY, GEMINI_MODEL

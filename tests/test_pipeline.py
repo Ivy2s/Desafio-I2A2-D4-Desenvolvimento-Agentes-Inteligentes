@@ -1,40 +1,34 @@
+from pathlib import Path
+from zipfile import ZipFile
+
 from pipeline.data_manager import DataManager
 
 
-def main():
-    manager = DataManager()
+def test_pipeline_loads_zip_and_queries_without_machine_paths(tmp_path: Path):
+    zip_path = tmp_path / "dataset.zip"
+    with ZipFile(zip_path, "w") as archive:
+        archive.writestr("items.csv", "id,value\n1,10\n2,20\n")
 
-    manager.load("/Users/jheni/Desktop/Desafio-I2A2-D4-Desenvolvimento-Agentes-Inteligentes/data/202401_NFs.zip")
+    manager = DataManager(data_dir=str(tmp_path / "runtime"))
+    manager.load(str(zip_path))
 
-    print("\n=== DATASETS ===")
-    print(manager.datasets.keys())
-
-    print("\n=== DESCRIÇÃO ===")
-    print(manager.describe())
-
-    print("\n=== CONSULTA ===")
-
-    result = manager.query(
-        operation="count",
-        dataset="202401_nfs_itens"
-    )
-
-    print(result)
-
-    print("\n=== RANKING ===")
-
-    result = manager.query(
-        operation="aggregate",
-        dataset="202401_nfs_itens",
-        group_by="razao_social_emitente",
-        metric="valor_total",
-        aggregation="sum",
-        sort="valor_total",
-        limit=5
-    )
-
-    print(result)
+    assert manager.query(operation="count", dataset="items")["result"] == 2
+    assert manager.query(operation="aggregate", dataset="items", group_by="id", metric="value", aggregation="sum")["result"]
 
 
-if __name__ == "__main__":
-    main()
+def test_pipeline_processes_provided_data_dictionary(tmp_path: Path):
+    zip_path = tmp_path / "dataset.zip"
+    with ZipFile(zip_path, "w") as archive:
+        archive.writestr("compras/compras.csv", "fornecedor,valor\nAlfa,10\n")
+        archive.writestr(
+            "dicionario.csv",
+            "arquivo,coluna,descricao\ncompras.csv,valor,Valor total da compra\n",
+        )
+
+    manager = DataManager(data_dir=str(tmp_path / "runtime"))
+    manager.load(str(zip_path))
+
+    assert set(manager.datasets) == {"compras"}
+    assert manager.describe()["compras"]["descriptions"] == {
+        "valor": "Valor total da compra"
+    }

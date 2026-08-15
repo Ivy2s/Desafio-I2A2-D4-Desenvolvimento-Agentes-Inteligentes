@@ -1,0 +1,2 @@
+d0a94acbb519283ff52ce4c3b3cf82dfdfb61111f544da0e89ccb356e8a047f7  deliverables/relatorio_tecnico_desafio_4.pdf
+6b3b302d8a6f047bd47feec541993e614713d51cdaf0816f92bec7af44ef96c5  deliverables/desafio_4_codigo_fonte.zip

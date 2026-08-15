@@ -1,0 +1,4 @@
+arquivo,coluna,descricao
+compras.csv,fornecedor,Fornecedor da compra
+compras.csv,valor,Valor total da compra
+fornecedores.csv,cidade,Cidade do fornecedor

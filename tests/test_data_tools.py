@@ -1,22 +1,19 @@
-from tools.data_tools import DataQuery, query_data, describe_data
+from pathlib import Path
+
+from tools.data_tools import DataQuery, describe_data, query_data
+from pipeline.data_manager import DataManager
 
 
-print("=== DATASETS ===")
-print(describe_data().keys())
+def test_data_tools_use_the_provided_manager(tmp_path: Path):
+    csv_path = tmp_path / "records.csv"
+    csv_path.write_text("name,value\nAlice,10\nBob,20\n", encoding="utf-8")
+    manager = DataManager(data_dir=str(tmp_path / "data"))
+    manager.load(str(csv_path))
 
-
-print("\n=== QUERY ===")
-
-query = DataQuery(
-    operation="aggregate",
-    dataset="202401_nfs_itens",
-    group_by="razao_social_emitente",
-    metric="valor_total",
-    aggregation="sum",
-    sort="valor_total",
-    limit=5,
-)
-
-result = query_data(query)
-
-print(result)
+    assert list(describe_data(manager)) == ["records"]
+    result = query_data(
+        DataQuery(operation="aggregate", dataset="records", group_by="name", metric="value", aggregation="sum"),
+        manager,
+    )
+    assert result["dataset"] == "records"
+    assert len(result["result"]) == 2

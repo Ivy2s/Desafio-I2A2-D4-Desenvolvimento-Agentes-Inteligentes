@@ -3,6 +3,7 @@ from typing import Optional, Literal
 from pydantic import BaseModel, Field
 
 from pipeline.data_manager import DataManager
+from services.config import MAX_QUERY_RESULT_ROWS
 
 
 class DataQuery(BaseModel):
@@ -70,19 +71,23 @@ class DataQuery(BaseModel):
     limit: Optional[int] = Field(
         default=None,
         ge=1,
+        le=MAX_QUERY_RESULT_ROWS,
         description=(
-            "Número máximo de resultados a retornar."
+            "Número máximo de resultados a retornar. O limite público é "
+            f"{MAX_QUERY_RESULT_ROWS}."
         )
     )
 
 
-data_manager = DataManager()
-
-
-def query_data(query: DataQuery):
+def query_data(query: DataQuery, manager: Optional[DataManager] = None):
     """
     Executa uma consulta estruturada nos dados carregados.
     """
+
+    data_manager = manager or DataManager()
+    effective_limit = query.limit
+    if query.operation in {"list", "aggregate"}:
+        effective_limit = min(query.limit or MAX_QUERY_RESULT_ROWS, MAX_QUERY_RESULT_ROWS)
 
     return data_manager.query(
         operation=query.operation,
@@ -92,14 +97,14 @@ def query_data(query: DataQuery):
         metric=query.metric,
         aggregation=query.aggregation,
         sort=query.sort,
-        limit=query.limit,
+        limit=effective_limit,
     )
 
 
-def describe_data():
+def describe_data(manager: Optional[DataManager] = None):
     """
     Retorna os datasets disponíveis e seus metadados,
     incluindo colunas, tipos de dados e amostras.
     """
 
-    return data_manager.describe()
+    return (manager or DataManager()).describe()
