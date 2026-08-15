@@ -10,7 +10,7 @@
 
 - Branch: `feat/frontend-ui`
 - HEAD inicial: `6351c82 docs: record Groq E2E evidence`
-- HEAD final: será registrado no commit final desta certificação
+- HEAD final: `c6d90b2 test: certify full Groq browser suite`
 - Push/PR: não realizados
 
 ## Suítes
