@@ -37,9 +37,9 @@ describe('HttpDataAssistantGateway', () => {
   })
 
   it.each([
-    [{ answer: 'Texto.', data: null }, { answer: 'Texto.' }],
-    [{ answer: '565 registros.', data: { type: 'count', value: 565 } }, { count: 565 }],
-    [{ answer: 'Tabela.', data: { type: 'table', columns: ['b', 'a'], rows: [{ a: 1, b: 2 }], truncated: true, returnedRows: 1 } }, { table: { columns: ['b', 'a'], rows: [{ b: 2, a: 1 }], truncated: true, returnedRows: 1 } }],
+    [{ answer: 'Texto.', data: null }, { answer: 'Texto.', data: null }],
+    [{ answer: '565 registros.', data: { type: 'count', value: 565 } }, { data: { type: 'count', value: 565 } }],
+    [{ answer: 'Tabela.', data: { type: 'table', columns: ['b', 'a'], rows: [{ a: 1, b: 2 }], truncated: true, returnedRows: 1 } }, { data: { type: 'table', columns: ['b', 'a'], rows: [{ b: 2, a: 1 }], truncated: true, returnedRows: 1 } }],
   ])('adapts query data', async (body, expected) => {
     const fetcher = vi.fn(async (input, init) => {
       expect(input).toBe('http://api.test/api/datasets/abc/query')

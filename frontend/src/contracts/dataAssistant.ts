@@ -20,15 +20,23 @@ export interface QueryRequest {
   question: string
 }
 
-export type ChartType = 'bar' | 'line' | 'pie'
+export interface CountData { type: 'count'; value: number }
+
+export interface TableData {
+  type: 'table'
+  columns: string[]
+  rows: Record<string, unknown>[]
+  truncated: boolean
+  returnedRows: number
+}
+
+export type QueryData = CountData | TableData
 
 export interface QueryResponse {
   id: string
   question: string
   answer: string
-  count?: number
-  table?: { columns: string[]; rows: Record<string, unknown>[]; truncated?: boolean; returnedRows?: number }
-  chart?: { type: ChartType; title?: string; xKey: string; yKey: string; data: Record<string, unknown>[] }
+  data: QueryData | null
   metadata?: { executionTimeMs?: number; agent?: string }
 }
 

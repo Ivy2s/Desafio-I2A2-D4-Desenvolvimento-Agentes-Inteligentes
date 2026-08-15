@@ -1,12 +1,9 @@
-interface DataTableProps { columns: string[]; rows: Record<string, unknown>[] }
+import type { TableData } from '../../contracts/dataAssistant'
+import { formatCellValue, labelForColumn } from './tableFormatting'
+interface DataTableProps { table: TableData }
 
-const formatValue = (value: unknown, column: string) => {
-  if (typeof value !== 'number') return String(value ?? '—')
-  if (column === 'valor' || column === 'total') return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-  return value.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
-}
-const labelFor = (key: string) => key.replace(/([A-Z])/g, ' $1').replace(/^./, (letter) => letter.toUpperCase())
-
-export function DataTable({ columns, rows }: DataTableProps) {
-  return <div className="table-scroll"><table><thead><tr>{columns.map((column) => <th key={column}>{labelFor(column)}</th>)}</tr></thead><tbody>{rows.map((row, index) => <tr key={index}>{columns.map((column) => <td key={column} className={typeof row[column] === 'number' ? 'numeric' : ''}>{formatValue(row[column], column)}</td>)}</tr>)}</tbody></table></div>
+export function DataTable({ table }: DataTableProps) {
+  const { columns, rows } = table
+  if (rows.length === 0) return <p className="table-empty">Nenhum registro retornado.</p>
+  return <div className="table-scroll"><table><thead><tr>{columns.map((column) => <th key={column} scope="col">{labelForColumn(column)}</th>)}</tr></thead><tbody>{rows.map((row, index) => <tr key={index}>{columns.map((column) => <td key={column} className={typeof row[column] === 'number' ? 'numeric' : ''}>{formatCellValue(row[column])}</td>)}</tr>)}</tbody></table></div>
 }

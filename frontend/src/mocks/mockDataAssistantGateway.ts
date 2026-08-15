@@ -41,8 +41,7 @@ export class MockDataAssistantGateway implements DataAssistantGateway {
       return {
         id: crypto.randomUUID(), question: request.question,
         answer: 'A Metalúrgica Horizonte concentrou o maior valor no período, com R$ 184.250,40. Os cinco maiores fornecedores representam 68,4% do total analisado.',
-        table: { columns: ['fornecedor', 'valor'], rows: supplierRows },
-        chart: { type: 'bar', title: 'Valor comprado por fornecedor', xKey: 'fornecedor', yKey: 'valor', data: supplierRows },
+         data: { type: 'table', columns: ['fornecedor', 'valor'], rows: supplierRows, truncated: false, returnedRows: supplierRows.length },
         metadata: { executionTimeMs: 1100, agent: 'mock fixture' },
       }
     }
@@ -50,7 +49,7 @@ export class MockDataAssistantGateway implements DataAssistantGateway {
       return {
         id: crypto.randomUUID(), question: request.question,
         answer: 'A Bobina de aço 2mm apresentou o maior volume comprado, com 8.420 unidades no período.',
-        table: { columns: ['produto', 'unidades'], rows: productRows },
+         data: { type: 'table', columns: ['produto', 'unidades'], rows: productRows, truncated: false, returnedRows: productRows.length },
         metadata: { executionTimeMs: 1100, agent: 'mock fixture' },
       }
     }
@@ -58,13 +57,14 @@ export class MockDataAssistantGateway implements DataAssistantGateway {
       return {
         id: crypto.randomUUID(), question: request.question,
         answer: 'O total mensal cresceu de forma contínua no recorte demonstrativo, chegando a R$ 277.640 em junho.',
-        chart: { type: 'line', title: 'Total gasto por mês', xKey: 'mes', yKey: 'total', data: monthRows },
-        metadata: { executionTimeMs: 1100, agent: 'mock fixture' },
+         data: { type: 'table', columns: ['mes', 'total'], rows: monthRows, truncated: false, returnedRows: monthRows.length },
+       metadata: { executionTimeMs: 1100, agent: 'mock fixture' },
       }
     }
     return {
       id: crypto.randomUUID(), question: request.question,
       answer: 'Esta é uma resposta demonstrativa. Quando o pipeline estiver conectado, esta pergunta será respondida com base nas colunas e registros do dataset ativo.',
+      data: null,
       metadata: { executionTimeMs: 1100, agent: 'mock fixture' },
     }
   }

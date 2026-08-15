@@ -28,7 +28,9 @@ UI features -> DataAssistantGateway -> HttpDataAssistantGateway -> FastAPI
 
 `MockDataAssistantGateway` é usado apenas durante o desenvolvimento da UI. Ele simula upload, processamento, latência, erros recuperáveis e cinco consultas de demonstração. O mock não representa processamento real e não usa LLM.
 
-`HttpDataAssistantGateway` implementa upload, metadata, consulta e health sobre a API FastAPI. A aplicação usa essa implementação para upload e consultas; `MockDataAssistantGateway` permanece disponível para testes e desenvolvimento offline. Ele usa `VITE_API_BASE_URL`, com default `http://127.0.0.1:8000`. Nenhum `fetch()` está espalhado pelos componentes.
+`HttpDataAssistantGateway` implementa upload, metadata, consulta e health sobre a API FastAPI. O fluxo normal usa essa implementação para upload, metadata e consultas; `MockDataAssistantGateway` permanece disponível para testes e desenvolvimento offline. Ele usa `VITE_API_BASE_URL`, com default `http://127.0.0.1:8000`. Nenhum `fetch()` está espalhado pelos componentes.
+
+As respostas seguem o contrato `QueryResponse`: `answer` é renderizado como texto seguro, `count` como indicador quantitativo e `table` como tabela responsiva. Gráficos de barras e linhas são derivados deterministicamente no frontend a partir da tabela, sem configuração visual do backend ou do LLM. A tabela permanece disponível como fonte visual primária e o histórico mantém os dados de cada resposta separadamente.
 
 ## API local
 

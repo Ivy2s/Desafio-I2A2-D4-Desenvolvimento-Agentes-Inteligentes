@@ -30,11 +30,11 @@ export function toDatasetSummary(response: ApiDatasetResponse): DatasetSummary {
 export function toQueryResponse(response: ApiQueryResponse, question: string): QueryResponse {
   assertQueryResponse(response)
   if (response.data === null) {
-    return { id: crypto.randomUUID(), question, answer: response.answer }
+    return { id: crypto.randomUUID(), question, answer: response.answer, data: null }
   }
 
   if (response.data.type === 'count') {
-    return { id: crypto.randomUUID(), question, answer: response.answer, count: response.data.value }
+    return { id: crypto.randomUUID(), question, answer: response.answer, data: response.data }
   }
 
   const tableData = response.data
@@ -42,7 +42,8 @@ export function toQueryResponse(response: ApiQueryResponse, question: string): Q
     id: crypto.randomUUID(),
     question,
     answer: response.answer,
-    table: {
+    data: {
+      type: 'table',
       columns: tableData.columns,
       rows: tableData.rows.map((row) => Object.fromEntries(tableData.columns.map((column) => [column, row[column]]))),
       truncated: tableData.truncated,
