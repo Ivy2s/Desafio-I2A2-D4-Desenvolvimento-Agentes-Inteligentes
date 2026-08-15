@@ -76,14 +76,12 @@ class DataQuery(BaseModel):
     )
 
 
-data_manager = DataManager()
-
-
-def query_data(query: DataQuery):
+def query_data(query: DataQuery, manager: Optional[DataManager] = None):
     """
     Executa uma consulta estruturada nos dados carregados.
     """
 
+    data_manager = manager or DataManager()
     return data_manager.query(
         operation=query.operation,
         dataset=query.dataset,
@@ -96,10 +94,10 @@ def query_data(query: DataQuery):
     )
 
 
-def describe_data():
+def describe_data(manager: Optional[DataManager] = None):
     """
     Retorna os datasets disponíveis e seus metadados,
     incluindo colunas, tipos de dados e amostras.
     """
 
-    return data_manager.describe()
+    return (manager or DataManager()).describe()

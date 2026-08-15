@@ -1,0 +1,143 @@
+from io import BytesIO
+from types import SimpleNamespace
+from zipfile import ZipFile
+
+from fastapi.testclient import TestClient
+
+from api.main import create_app
+from services.query_service import QueryResult
+
+
+CSV = b"name,value\nalpha,10\nbeta,20\n"
+
+
+def client_for(tmp_path):
+    return TestClient(create_app(str(tmp_path / "datasets")))
+
+
+def upload(client, filename="data.csv", content=CSV):
+    response = client.post(
+        "/api/datasets",
+        files={"file": (filename, content, "text/csv")},
+    )
+    assert response.status_code == 201
+    return response.json()
+
+
+def zip_bytes(*entries):
+    buffer = BytesIO()
+    with ZipFile(buffer, "w") as archive:
+        for name, content in entries:
+            archive.writestr(name, content)
+    return buffer.getvalue()
+
+
+def test_health_does_not_require_ai_key(tmp_path):
+    response = client_for(tmp_path).get("/api/health")
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+
+
+def test_upload_csv_and_metadata(tmp_path):
+    client = client_for(tmp_path)
+    payload = upload(client)
+
+    assert payload["status"] == "ready"
+    assert payload["summary"] == {"files": 1, "rows": 2, "columns": 2}
+    dataset_id = payload["datasetId"]
+    response = client.get(f"/api/datasets/{dataset_id}")
+    assert response.status_code == 200
+    assert response.json()["datasets"][0]["name"] == "data"
+
+
+def test_upload_zip_with_nested_csv(tmp_path):
+    client = client_for(tmp_path)
+    content = zip_bytes(("nested/data.csv", CSV), ("notes.txt", b"ignored"))
+    payload = upload(client, "bundle.zip", content)
+    assert payload["summary"]["files"] == 1
+    assert payload["datasets"][0]["name"] == "data"
+
+
+def test_upload_rejects_corrupt_or_empty_zip(tmp_path):
+    client = client_for(tmp_path)
+    corrupt = client.post(
+        "/api/datasets",
+        files={"file": ("broken.zip", b"not a zip", "application/zip")},
+    )
+    empty = client.post(
+        "/api/datasets",
+        files={"file": ("empty.zip", zip_bytes(("notes.txt", b"ignored")), "application/zip")},
+    )
+    assert corrupt.status_code == 400
+    assert empty.status_code == 400
+
+
+def test_zip_path_traversal_is_rejected(tmp_path):
+    client = client_for(tmp_path)
+    content = zip_bytes(("../outside.csv", CSV))
+    response = client.post(
+        "/api/datasets",
+        files={"file": ("unsafe.zip", content, "application/zip")},
+    )
+    assert response.status_code == 400
+    assert not (tmp_path / "outside.csv").exists()
+
+
+def test_upload_rejects_unsupported_format(tmp_path):
+    response = client_for(tmp_path).post(
+        "/api/datasets",
+        files={"file": ("notes.txt", b"text", "text/plain")},
+    )
+    assert response.status_code == 415
+
+
+def test_uploads_are_isolated(tmp_path):
+    client = client_for(tmp_path)
+    first = upload(client)
+    second = upload(client, "other.csv", b"other,total\none,3\n")
+    assert first["datasetId"] != second["datasetId"]
+    assert client.get(f"/api/datasets/{first['datasetId']}").json()["datasets"][0]["name"] == "data"
+    assert client.get(f"/api/datasets/{second['datasetId']}").json()["datasets"][0]["name"] == "other"
+
+
+def test_missing_dataset_returns_404(tmp_path):
+    response = client_for(tmp_path).get("/api/datasets/00000000-0000-0000-0000-000000000000")
+    assert response.status_code == 404
+
+
+def test_query_without_ai_key_returns_controlled_error(tmp_path, monkeypatch):
+    import services.query_service as query_service
+
+    monkeypatch.setattr(query_service, "is_ai_configured", lambda: False)
+    client = client_for(tmp_path)
+    dataset_id = upload(client)["datasetId"]
+    response = client.post(
+        f"/api/datasets/{dataset_id}/query",
+        json={"question": "quantos registros existem?"},
+    )
+    assert response.status_code == 503
+
+
+def test_query_uses_structured_application_result(tmp_path):
+    app = create_app(str(tmp_path / "datasets"))
+    client = TestClient(app)
+    dataset_id = upload(client)["datasetId"]
+    app.state.query_service = SimpleNamespace(
+        query=lambda received_id, question: QueryResult(
+            answer=f"Resposta para {question}",
+            data={"type": "table", "columns": ["name"], "rows": [{"name": "alpha"}],},
+        )
+    )
+    response = client.post(
+        f"/api/datasets/{dataset_id}/query",
+        json={"question": "liste os registros"},
+    )
+    assert response.status_code == 200
+    assert response.json()["data"]["type"] == "table"
+
+
+def test_query_rejects_blank_question(tmp_path):
+    client = client_for(tmp_path)
+    dataset_id = upload(client)["datasetId"]
+    response = client.post(f"/api/datasets/{dataset_id}/query", json={"question": "   "})
+    assert response.status_code == 422

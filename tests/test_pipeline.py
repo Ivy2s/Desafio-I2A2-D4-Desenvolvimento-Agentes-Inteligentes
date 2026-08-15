@@ -1,10 +1,12 @@
 from pipeline.data_manager import DataManager
+from pathlib import Path
 
 
 def main():
     manager = DataManager()
 
-    manager.load("/Users/jheni/Desktop/Desafio-I2A2-D4-Desenvolvimento-Agentes-Inteligentes/data/202401_NFs.zip")
+    zip_path = Path(__file__).resolve().parents[1] / "data" / "202401_NFs.zip"
+    manager.load(str(zip_path))
 
     print("\n=== DATASETS ===")
     print(manager.datasets.keys())

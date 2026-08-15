@@ -1,12 +1,7 @@
-from services.config import GOOGLE_API_KEY
-from agents.csv_agent import create_agent
+import uvicorn
 
-def main():
-    print("Iniciando Agente CSV...")
+from api.main import app
 
-    agent = create_agent()
-
-    print("Agente iniciado com sucesso!")
 
 if __name__ == "__main__":
-    main()
+    uvicorn.run(app, host="127.0.0.1", port=8000)

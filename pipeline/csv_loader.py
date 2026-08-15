@@ -19,8 +19,12 @@ class CSVLoader:
             raise FileNotFoundError(f"Diretorio nao encontrado: {directory}")
 
         datasets: dict[str, pd.DataFrame] = {}
-        for csv_file in base_path.glob("*.csv"):
+        for csv_file in base_path.rglob("*.csv"):
             dataset_name = csv_file.stem.lower()
+            if dataset_name in datasets:
+                raise ValueError(
+                    f"Datasets com o mesmo nome encontrados: {dataset_name}"
+                )
             datasets[dataset_name] = cls.load_csv(str(csv_file))
 
         return datasets
