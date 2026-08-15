@@ -6,6 +6,7 @@ import { QueryComposer } from '../features/query/QueryComposer'
 import { SuggestedQuestions } from '../features/query/SuggestedQuestions'
 import { UploadDropzone } from '../features/upload/UploadDropzone'
 import { UploadSteps } from '../features/upload/UploadSteps'
+import { DataAssistantApiError } from '../services/http/dataAssistantApiError'
 import { dataAssistantGateway } from '../services/dataAssistantGateway'
 import './app.css'
 
@@ -18,7 +19,6 @@ function Brand() {
 function App() {
   const [uploadState, setUploadState] = useState<UploadState>('idle')
   const [selectedFile, setSelectedFile] = useState<File>()
-  const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadError, setUploadError] = useState<string>()
   const [dataset, setDataset] = useState<DatasetSummary>()
   const [view, setView] = useState<'upload' | 'workspace'>('upload')
@@ -30,35 +30,26 @@ function App() {
   const handleFile = (file: File) => {
     setUploadError(undefined)
     setSelectedFile(undefined)
-    setUploadState('validating')
-    window.setTimeout(() => {
-      if (!file.name.toLowerCase().endsWith('.zip')) {
-        setUploadError('Este formato não é aceito. Escolha um arquivo .ZIP.')
-        setUploadState('invalid-file')
-        return
-      }
-      setSelectedFile(file)
-      setUploadState('selected')
-    }, 280)
+    const lowerName = file.name.toLowerCase()
+    if (!lowerName.endsWith('.zip') && !lowerName.endsWith('.csv')) {
+      setUploadError('Este formato não é aceito. Escolha um arquivo .CSV ou .ZIP.')
+      setUploadState('invalid-file')
+      return
+    }
+    setSelectedFile(file)
+    setUploadState('selected')
   }
 
   const handleStartUpload = async () => {
     if (!selectedFile) return
     setUploadError(undefined)
-    setUploadProgress(4)
     setUploadState('uploading')
-    const progressTimer = window.setInterval(() => setUploadProgress((current) => Math.min(current + 12, 92)), 150)
     try {
       const summary = await dataAssistantGateway.uploadDataset(selectedFile)
-      window.clearInterval(progressTimer)
-      setUploadProgress(100)
-      setUploadState('processing')
-      await new Promise((resolve) => window.setTimeout(resolve, 950))
       setDataset(summary)
       setUploadState('ready')
     } catch (error) {
-      window.clearInterval(progressTimer)
-      setUploadError(error instanceof Error ? error.message : 'Não foi possível processar este arquivo.')
+      setUploadError(getUploadErrorMessage(error))
       setUploadState('error')
     }
   }
@@ -67,7 +58,6 @@ function App() {
     setSelectedFile(undefined)
     setDataset(undefined)
     setUploadError(undefined)
-    setUploadProgress(0)
     setUploadState('idle')
     setView('upload')
     setHistory([])
@@ -96,11 +86,20 @@ function App() {
   return <main className="app-shell upload-screen">
     <header className="topbar"><Brand /></header>
     <section className="hero" aria-labelledby="page-title"><div className="hero__copy"><p className="eyebrow"><span className="eyebrow__line" /> workspace de dados</p><h1 id="page-title">Pergunte aos seus <em>dados.</em></h1><p className="hero__lead">Transforme arquivos CSV em respostas claras. Comece enviando um dataset para preparar seu espaço de análise.</p></div><div className="hero__signal" aria-hidden="true"><span /><span /><span /><span /><span /></div></section>
-    <section className="workspace upload-workspace" aria-labelledby="upload-title"><div className="section-heading"><div><span className="step-label">01 / iniciar</span><h2 id="upload-title">Adicione um dataset</h2></div><p>Um ZIP com seus CSVs e dicionário<br className="desktop-only" /> de dados é tudo que precisamos.</p></div><UploadSteps state={uploadState} />
-      {uploadState === 'ready' && dataset ? <DatasetSummaryPanel dataset={dataset} onExplore={() => setView('workspace')} /> : <UploadDropzone state={uploadState} file={selectedFile} progress={uploadProgress} error={uploadError} onFile={handleFile} onStart={handleStartUpload} onRemove={resetUpload} onDragState={(active) => { if (!selectedFile && uploadState !== 'validating') setUploadState(active ? 'drag-active' : 'idle') }} />}
+     <section className="workspace upload-workspace" aria-labelledby="upload-title"><div className="section-heading"><div><span className="step-label">01 / iniciar</span><h2 id="upload-title">Adicione um dataset</h2></div><p>Um CSV ou ZIP com seus dados<br className="desktop-only" /> é tudo que precisamos.</p></div><UploadSteps state={uploadState} />
+       {uploadState === 'ready' && dataset ? <DatasetSummaryPanel dataset={dataset} onExplore={() => setView('workspace')} /> : <UploadDropzone state={uploadState} file={selectedFile} error={uploadError} onFile={handleFile} onStart={handleStartUpload} onRemove={resetUpload} onDragState={(active) => { if (!selectedFile) setUploadState(active ? 'drag-active' : 'idle') }} />}
     </section>
     <footer className="footer"><span>Data Assistent</span><span className="footer__detail">feito para explorar, entender e decidir</span></footer>
   </main>
+}
+
+function getUploadErrorMessage(error: unknown) {
+  if (!(error instanceof DataAssistantApiError)) return error instanceof Error ? error.message : 'Não foi possível enviar este arquivo.'
+  if (error.code === 'unsupported_file_type') return 'Envie um arquivo CSV ou ZIP.'
+  if (error.code === 'upload_too_large') return 'O arquivo excede o limite permitido.'
+  if (['invalid_zip', 'unsafe_zip_entry', 'no_csv_files_found', 'zip_limit_exceeded', 'dataset_load_failed'].includes(error.code)) return 'Não foi possível preparar os CSVs deste arquivo.'
+  if (error.code === 'network_error') return 'Não foi possível conectar ao servidor. Tente novamente.'
+  return error.message
 }
 
 interface WorkspaceProps { dataset: DatasetSummary; question: string; querying: boolean; queryError?: string; history: HistoryItem[]; onQuestionChange: (value: string) => void; onSubmit: (question: string) => void; onLoadAnother: () => void }
