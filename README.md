@@ -20,6 +20,15 @@ A API FastAPI mantém datasets carregados em memória e em `.runtime/datasets/`.
 Esse armazenamento é efêmero e é perdido quando o processo reinicia.
 O campo `summary.columns` representa a soma das colunas declaradas por cada
 CSV carregado; as colunas efetivas de cada dataset permanecem em `datasets`.
+Cada upload usa um UUID e um `DataManager` exclusivo. O diretório `data/`
+continua reservado aos dados de exemplo e ao fluxo legado, não sendo usado
+para uploads HTTP.
+
+ZIPs são extraídos somente depois de validar caminhos, tipos de entrada,
+duplicidades e limites. CSVs em subdiretórios são aceitos. Os limites padrão
+podem ser alterados por `MAX_UPLOAD_BYTES`, `MAX_ZIP_MEMBERS`,
+`MAX_ZIP_MEMBER_BYTES` e `MAX_ZIP_UNCOMPRESSED_BYTES` (500 MiB, 1.000
+entradas, 500 MiB por membro e 1 GiB descompactado, respectivamente).
 
 ```bash
 python3 -m venv venv

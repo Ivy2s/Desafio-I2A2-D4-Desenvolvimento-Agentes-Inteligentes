@@ -15,6 +15,7 @@ from services.exceptions import (
     DatasetNotFoundError,
     InvalidDatasetError,
     UnsupportedFileError,
+    UploadTooLargeError,
 )
 
 router = APIRouter(prefix="/api/datasets")
@@ -24,16 +25,18 @@ router = APIRouter(prefix="/api/datasets")
     "",
     response_model=DatasetUploadResponse,
     status_code=status.HTTP_201_CREATED,
-    responses={400: {"model": ErrorResponse}, 415: {"model": ErrorResponse}},
+    responses={400: {"model": ErrorResponse}, 413: {"model": ErrorResponse}, 415: {"model": ErrorResponse}},
 )
 async def upload_dataset(request: Request, file: UploadFile = File(...)) -> DatasetUploadResponse:
     try:
         session = await request.app.state.dataset_service.upload(file)
         return request.app.state.dataset_service.metadata(session)
     except UnsupportedFileError as error:
-        raise HTTPException(status_code=415, detail=str(error)) from error
+        raise HTTPException(status_code=415, detail={"code": error.code, "message": str(error)}) from error
+    except UploadTooLargeError as error:
+        raise HTTPException(status_code=413, detail={"code": error.code, "message": str(error)}) from error
     except InvalidDatasetError as error:
-        raise HTTPException(status_code=400, detail=str(error)) from error
+        raise HTTPException(status_code=400, detail={"code": error.code, "message": str(error)}) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail="Erro interno ao processar o dataset") from error
 

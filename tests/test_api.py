@@ -1,6 +1,9 @@
 from io import BytesIO
+from pathlib import Path
+import stat
 from types import SimpleNamespace
-from zipfile import ZipFile
+from uuid import UUID
+from zipfile import ZipFile, ZipInfo
 
 from fastapi.testclient import TestClient
 
@@ -73,7 +76,8 @@ def test_upload_rejects_corrupt_or_empty_zip(tmp_path):
 
 
 def test_zip_path_traversal_is_rejected(tmp_path):
-    client = client_for(tmp_path)
+    app = create_app(str(tmp_path / "datasets"))
+    client = TestClient(app)
     content = zip_bytes(("../outside.csv", CSV))
     response = client.post(
         "/api/datasets",
@@ -81,6 +85,43 @@ def test_zip_path_traversal_is_rejected(tmp_path):
     )
     assert response.status_code == 400
     assert not (tmp_path / "outside.csv").exists()
+    assert list((tmp_path / "datasets").iterdir()) == []
+    assert list(app.state.registry) == []
+
+
+def test_zip_absolute_windows_path_is_rejected(tmp_path):
+    client = client_for(tmp_path)
+    content = zip_bytes((r"C:\Windows\evil.csv", CSV))
+    response = client.post(
+        "/api/datasets",
+        files={"file": ("unsafe.zip", content, "application/zip")},
+    )
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "unsafe_zip_entry"
+
+
+def test_zip_absolute_unix_path_is_rejected(tmp_path):
+    response = client_for(tmp_path).post(
+        "/api/datasets",
+        files={"file": ("unsafe.zip", zip_bytes(("/tmp/evil.csv", CSV)), "application/zip")},
+    )
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "unsafe_zip_entry"
+
+
+def test_zip_symlink_is_rejected(tmp_path):
+    buffer = BytesIO()
+    info = ZipInfo("linked.csv")
+    info.external_attr = stat.S_IFLNK << 16
+    with ZipFile(buffer, "w") as archive:
+        archive.writestr(info, "../../outside.csv")
+
+    response = client_for(tmp_path).post(
+        "/api/datasets",
+        files={"file": ("symlink.zip", buffer.getvalue(), "application/zip")},
+    )
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "unsafe_zip_entry"
 
 
 def test_upload_rejects_unsupported_format(tmp_path):
@@ -98,6 +139,82 @@ def test_uploads_are_isolated(tmp_path):
     assert first["datasetId"] != second["datasetId"]
     assert client.get(f"/api/datasets/{first['datasetId']}").json()["datasets"][0]["name"] == "data"
     assert client.get(f"/api/datasets/{second['datasetId']}").json()["datasets"][0]["name"] == "other"
+
+
+def test_uploads_keep_managers_and_directories_isolated(tmp_path):
+    legacy_data = Path(__file__).resolve().parents[1] / "data"
+    legacy_before = {path.name for path in legacy_data.iterdir()}
+    app = create_app(str(tmp_path / "datasets"))
+    client = TestClient(app)
+    first = upload(client, "a.csv", b"name,value\nAlice,1\n")
+    second = upload(client, "b.csv", b"product,total\nMouse,100\n")
+
+    first_session = app.state.registry.get(UUID(first["datasetId"]))
+    second_session = app.state.registry.get(UUID(second["datasetId"]))
+    assert first_session.root_dir != second_session.root_dir
+    assert first_session.manager is not second_session.manager
+    assert set(first_session.manager.datasets) == {"a"}
+    assert set(second_session.manager.datasets) == {"b"}
+    assert not (first_session.root_dir / "data" / "b.csv").exists()
+    assert not (second_session.root_dir / "data" / "a.csv").exists()
+    assert {path.name for path in legacy_data.iterdir()} == legacy_before
+
+
+def test_two_zips_with_same_internal_basename_are_isolated(tmp_path):
+    client = client_for(tmp_path)
+    first = upload(client, "first.zip", zip_bytes(("A/data.csv", CSV)))
+    second = upload(client, "second.zip", zip_bytes(("B/data.csv", CSV)))
+    assert first["datasetId"] != second["datasetId"]
+    assert first["datasets"][0]["name"] == "data"
+    assert second["datasets"][0]["name"] == "data"
+
+
+def test_duplicate_csv_basenames_in_one_zip_are_rejected(tmp_path):
+    response = client_for(tmp_path).post(
+        "/api/datasets",
+        files={
+            "file": (
+                "collision.zip",
+                zip_bytes(("a/data.csv", CSV), ("b/data.csv", CSV)),
+                "application/zip",
+            )
+        },
+    )
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "dataset_load_failed"
+    assert list((tmp_path / "datasets").iterdir()) == []
+
+
+def test_upload_limit_cleans_session(tmp_path, monkeypatch):
+    import services.dataset_service as dataset_service
+
+    monkeypatch.setattr(dataset_service, "MAX_UPLOAD_BYTES", 4)
+    app = create_app(str(tmp_path / "datasets"))
+    client = TestClient(app)
+    response = client.post(
+        "/api/datasets",
+        files={"file": ("large.csv", b"name,value\n", "text/csv")},
+    )
+    assert response.status_code == 413
+    assert response.json()["error"]["code"] == "upload_too_large"
+    assert list((tmp_path / "datasets").iterdir()) == []
+    assert list(app.state.registry) == []
+
+
+def test_zip_member_limit_cleans_session(tmp_path, monkeypatch):
+    import services.dataset_service as dataset_service
+
+    monkeypatch.setattr(dataset_service, "MAX_ZIP_MEMBERS", 1)
+    content = zip_bytes(("one.csv", CSV), ("two.csv", CSV))
+    app = create_app(str(tmp_path / "datasets"))
+    response = TestClient(app).post(
+        "/api/datasets",
+        files={"file": ("many.zip", content, "application/zip")},
+    )
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "zip_limit_exceeded"
+    assert list((tmp_path / "datasets").iterdir()) == []
+    assert list(app.state.registry) == []
 
 
 def test_missing_dataset_returns_404(tmp_path):

@@ -44,6 +44,7 @@ def test_query_service_runs_tool_loop_and_returns_table(monkeypatch, tmp_path):
 
     registry = SessionRegistry(str(tmp_path))
     session = registry.create()
+    registry.register(session)
     fake_tool = FakeTool()
     fake_agent = FakeAgent()
     monkeypatch.setattr(query_service, "is_ai_configured", lambda: True)
@@ -67,6 +68,7 @@ def test_query_service_enforces_iteration_limit(monkeypatch, tmp_path):
 
     registry = SessionRegistry(str(tmp_path))
     session = registry.create()
+    registry.register(session)
     fake_tool = FakeTool()
     fake_agent = FakeAgent()
     monkeypatch.setattr(query_service, "is_ai_configured", lambda: True)

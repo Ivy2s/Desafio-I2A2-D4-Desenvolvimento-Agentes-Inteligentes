@@ -20,6 +20,8 @@ class CSVLoader:
 
         datasets: dict[str, pd.DataFrame] = {}
         for csv_file in base_path.rglob("*.csv"):
+            if csv_file.is_symlink():
+                raise ValueError(f"Link simbólico não permitido: {csv_file}")
             dataset_name = csv_file.stem.lower()
             if dataset_name in datasets:
                 raise ValueError(

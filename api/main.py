@@ -47,11 +47,20 @@ def create_app(runtime_root: str | None = None) -> FastAPI:
             502: "query_execution_error",
             503: "ai_provider_unavailable",
         }
-        detail = exc.detail if isinstance(exc.detail, str) else "Requisição inválida"
+        detail = exc.detail
+        if isinstance(detail, dict):
+            code = detail.get("code", "http_error")
+            message = detail.get("message", "Requisição inválida")
+            details = detail.get("details")
+        else:
+            code = code_by_status.get(exc.status_code, "http_error")
+            message = detail if isinstance(detail, str) else "Requisição inválida"
+            details = None
         response = ErrorResponse(
             error={
-                "code": code_by_status.get(exc.status_code, "http_error"),
-                "message": detail,
+                "code": code,
+                "message": message,
+                "details": details,
             }
         )
         return JSONResponse(status_code=exc.status_code, content=response.model_dump())

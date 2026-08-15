@@ -36,8 +36,14 @@ class SessionRegistry:
             manager=DataManager(data_dir=str(data_dir)),
             created_at=datetime.now(timezone.utc),
         )
-        self._sessions[dataset_id] = session
         return session
+
+    def register(self, session: DatasetSession) -> None:
+        self._sessions[session.dataset_id] = session
+
+    def discard(self, session: DatasetSession) -> None:
+        self._sessions.pop(session.dataset_id, None)
+        shutil.rmtree(session.root_dir, ignore_errors=True)
 
     def get(self, dataset_id: UUID) -> DatasetSession:
         try:
