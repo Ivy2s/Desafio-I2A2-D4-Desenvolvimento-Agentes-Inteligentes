@@ -1,10 +1,13 @@
 import os
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from api.routes.datasets import router as datasets_router
 from api.routes.health import router as health_router
+from api.schemas.error import ErrorResponse
 from services.dataset_service import DatasetService
 from services.query_service import QueryService
 from services.session_registry import SessionRegistry
@@ -33,6 +36,37 @@ def create_app(runtime_root: str | None = None) -> FastAPI:
     app.state.registry = registry
     app.state.dataset_service = DatasetService(registry)
     app.state.query_service = QueryService(registry)
+
+    @app.exception_handler(HTTPException)
+    async def http_exception_handler(request: Request, exc: HTTPException):
+        code_by_status = {
+            400: "invalid_request",
+            404: "not_found",
+            415: "unsupported_file_type",
+            422: "validation_error",
+            502: "query_execution_error",
+            503: "ai_provider_unavailable",
+        }
+        detail = exc.detail if isinstance(exc.detail, str) else "Requisição inválida"
+        response = ErrorResponse(
+            error={
+                "code": code_by_status.get(exc.status_code, "http_error"),
+                "message": detail,
+            }
+        )
+        return JSONResponse(status_code=exc.status_code, content=response.model_dump())
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(request: Request, exc: RequestValidationError):
+        response = ErrorResponse(
+            error={
+                "code": "validation_error",
+                "message": "A requisição contém dados inválidos",
+                "details": exc.errors(),
+            }
+        )
+        return JSONResponse(status_code=422, content=response.model_dump(mode="json"))
+
     app.include_router(health_router)
     app.include_router(datasets_router)
     return app

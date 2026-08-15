@@ -27,10 +27,29 @@ class DatasetResponse(BaseModel):
     datasets: list[DatasetMetadata]
 
 
+class DatasetUploadResponse(DatasetResponse):
+    pass
+
+
+class DatasetDetailResponse(DatasetResponse):
+    pass
+
+
 class QueryRequest(BaseModel):
     question: str = Field(min_length=1, max_length=4000)
 
 
+class TableData(BaseModel):
+    type: Literal["table"]
+    columns: list[str]
+    rows: list[dict[str, Any]]
+
+
+class CountData(BaseModel):
+    type: Literal["count"]
+    value: int
+
+
 class QueryResponse(BaseModel):
     answer: str
-    data: dict[str, Any] | None = None
+    data: TableData | CountData | None = None

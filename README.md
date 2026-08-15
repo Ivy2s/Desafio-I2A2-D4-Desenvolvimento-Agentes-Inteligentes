@@ -18,6 +18,8 @@ Para testar localmente:
 
 A API FastAPI mantém datasets carregados em memória e em `.runtime/datasets/`.
 Esse armazenamento é efêmero e é perdido quando o processo reinicia.
+O campo `summary.columns` representa a soma das colunas declaradas por cada
+CSV carregado; as colunas efetivas de cada dataset permanecem em `datasets`.
 
 ```bash
 python3 -m venv venv
@@ -35,6 +37,8 @@ Endpoints disponíveis:
 - `POST /api/datasets` com `multipart/form-data` e campo `file` (`.csv` ou `.zip`)
 - `GET /api/datasets/{dataset_id}`
 - `POST /api/datasets/{dataset_id}/query` com `{"question": "..."}`
+
+Erros HTTP customizados usam o formato `{"error": {"code": "...", "message": "..."}}`.
 
 Os testes podem ser executados com:
 

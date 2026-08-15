@@ -2,7 +2,13 @@ from uuid import UUID
 
 from fastapi import APIRouter, File, HTTPException, Request, UploadFile, status
 
-from api.schemas.datasets import DatasetResponse, QueryRequest, QueryResponse
+from api.schemas.datasets import (
+    DatasetDetailResponse,
+    DatasetUploadResponse,
+    QueryRequest,
+    QueryResponse,
+)
+from api.schemas.error import ErrorResponse
 from services.exceptions import (
     AIUnavailableError,
     AgentExecutionError,
@@ -14,8 +20,13 @@ from services.exceptions import (
 router = APIRouter(prefix="/api/datasets")
 
 
-@router.post("", response_model=DatasetResponse, status_code=status.HTTP_201_CREATED)
-async def upload_dataset(request: Request, file: UploadFile = File(...)) -> DatasetResponse:
+@router.post(
+    "",
+    response_model=DatasetUploadResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses={400: {"model": ErrorResponse}, 415: {"model": ErrorResponse}},
+)
+async def upload_dataset(request: Request, file: UploadFile = File(...)) -> DatasetUploadResponse:
     try:
         session = await request.app.state.dataset_service.upload(file)
         return request.app.state.dataset_service.metadata(session)
@@ -27,8 +38,12 @@ async def upload_dataset(request: Request, file: UploadFile = File(...)) -> Data
         raise HTTPException(status_code=500, detail="Erro interno ao processar o dataset") from error
 
 
-@router.get("/{dataset_id}", response_model=DatasetResponse)
-def get_dataset(request: Request, dataset_id: UUID) -> DatasetResponse:
+@router.get(
+    "/{dataset_id}",
+    response_model=DatasetDetailResponse,
+    responses={404: {"model": ErrorResponse}},
+)
+def get_dataset(request: Request, dataset_id: UUID) -> DatasetDetailResponse:
     try:
         session = request.app.state.registry.get(dataset_id)
         return request.app.state.dataset_service.metadata(session)
@@ -38,7 +53,16 @@ def get_dataset(request: Request, dataset_id: UUID) -> DatasetResponse:
         raise HTTPException(status_code=500, detail="Erro interno ao ler o dataset") from error
 
 
-@router.post("/{dataset_id}/query", response_model=QueryResponse)
+@router.post(
+    "/{dataset_id}/query",
+    response_model=QueryResponse,
+    responses={
+        404: {"model": ErrorResponse},
+        422: {"model": ErrorResponse},
+        502: {"model": ErrorResponse},
+        503: {"model": ErrorResponse},
+    },
+)
 def query_dataset(
     request: Request,
     dataset_id: UUID,
