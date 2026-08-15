@@ -4,6 +4,10 @@ import os
 load_dotenv()
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GOOGLE_API_KEY_ALT = os.getenv("GOOGLE_API_KEY_ALT")
+GEMINI_PROFILE = os.getenv("GEMINI_PROFILE", "primary").lower()
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_MODEL_ALT = os.getenv("GEMINI_MODEL_ALT", "gemini-3.5-flash")
 
 
 def _env_int(name: str, default: int) -> int:
@@ -35,4 +39,11 @@ MAX_QUERY_RESULT_ROWS = _env_int("MAX_QUERY_RESULT_ROWS", 1000)
 
 
 def is_ai_configured() -> bool:
-    return bool(GOOGLE_API_KEY)
+    return bool(selected_gemini_credentials()[0])
+
+
+def selected_gemini_credentials() -> tuple[str | None, str]:
+    """Retorna a chave/modelo do perfil sem remover o perfil primário."""
+    if GEMINI_PROFILE == "alternative":
+        return GOOGLE_API_KEY_ALT or GOOGLE_API_KEY, GEMINI_MODEL_ALT
+    return GOOGLE_API_KEY, GEMINI_MODEL

@@ -5,8 +5,8 @@ pandas>=2.0,<3
 numpy>=1.26,<3
 pydantic>=2.0,<3
 python-dotenv>=1.0,<2
-langchain-core>=0.3,<1
-langchain-google-genai>=2.0,<3
+langchain-core>=1,<2
+langchain-google-genai>=4.3,<5
 
 # Testes
 pytest>=8,<9
