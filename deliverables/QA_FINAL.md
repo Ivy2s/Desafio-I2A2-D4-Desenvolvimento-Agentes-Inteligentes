@@ -10,7 +10,7 @@
 
 - Branch: `feat/frontend-ui`
 - HEAD inicial: `6351c82 docs: record Groq E2E evidence`
-- HEAD final: `1cf9c32 chore: finalize challenge QA and delivery package`
+- HEAD final: será o commit local que registra este fechamento documental
 - Push/PR: não realizados
 
 ## Suítes
