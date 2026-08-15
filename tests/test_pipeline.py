@@ -14,3 +14,21 @@ def test_pipeline_loads_zip_and_queries_without_machine_paths(tmp_path: Path):
 
     assert manager.query(operation="count", dataset="items")["result"] == 2
     assert manager.query(operation="aggregate", dataset="items", group_by="id", metric="value", aggregation="sum")["result"]
+
+
+def test_pipeline_processes_provided_data_dictionary(tmp_path: Path):
+    zip_path = tmp_path / "dataset.zip"
+    with ZipFile(zip_path, "w") as archive:
+        archive.writestr("compras/compras.csv", "fornecedor,valor\nAlfa,10\n")
+        archive.writestr(
+            "dicionario.csv",
+            "arquivo,coluna,descricao\ncompras.csv,valor,Valor total da compra\n",
+        )
+
+    manager = DataManager(data_dir=str(tmp_path / "runtime"))
+    manager.load(str(zip_path))
+
+    assert set(manager.datasets) == {"compras"}
+    assert manager.describe()["compras"]["descriptions"] == {
+        "valor": "Valor total da compra"
+    }

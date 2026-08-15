@@ -69,6 +69,17 @@ def test_upload_zip_with_nested_csv(tmp_path):
     assert payload["datasets"][0]["name"] == "data"
 
 
+def test_upload_zip_processes_data_dictionary_without_counting_it(tmp_path):
+    client = client_for(tmp_path)
+    content = zip_bytes(
+        ("compras/compras.csv", b"fornecedor,valor\nAlfa,10\n"),
+        ("dicionario.csv", b"arquivo,coluna,descricao\ncompras.csv,valor,Valor total\n"),
+    )
+    payload = upload(client, "bundle.zip", content)
+
+    assert payload["summary"] == {"files": 1, "rows": 1, "columns": 2}
+
+
 def test_upload_rejects_corrupt_or_empty_zip(tmp_path):
     client = client_for(tmp_path)
     corrupt = client.post(

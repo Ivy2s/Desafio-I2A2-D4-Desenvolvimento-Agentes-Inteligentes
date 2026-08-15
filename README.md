@@ -1,65 +1,52 @@
-### Dados de teste
+# Data Assistent
 
-Os datasets fornecidos pelo curso não são versionados neste
+Interface React para consultar CSVs com um agente LangChain/Gemini. O fluxo é upload de CSV/ZIP na Interface A, processamento automático no FastAPI e consulta em linguagem natural na Interface B.
 
-repositório devido ao tamanho dos arquivos.
+## Requisitos
 
-Para testar localmente:
+Python 3.11+ com `venv`/`ensurepip`, Node.js 20+ e `GOOGLE_API_KEY` no backend para consultas reais. A chave nunca deve ser configurada no frontend.
 
-1. Baixe os datasets disponibilizados pelo curso.
-
-2. Coloque o ZIP em `data/raw/`.
-
-3. Execute a aplicação.
-
-4. Faça o upload do ZIP pela Interface A.
-
-## API local
-
-A API FastAPI mantém datasets carregados em memória e em `.runtime/datasets/`.
-Esse armazenamento é efêmero e é perdido quando o processo reinicia.
-O campo `summary.columns` representa a soma das colunas declaradas por cada
-CSV carregado; as colunas efetivas de cada dataset permanecem em `datasets`.
-Cada upload usa um UUID e um `DataManager` exclusivo. O diretório `data/`
-continua reservado aos dados de exemplo e ao fluxo legado, não sendo usado
-para uploads HTTP.
-
-ZIPs são extraídos somente depois de validar caminhos, tipos de entrada,
-duplicidades e limites. CSVs em subdiretórios são aceitos. Os limites padrão
-podem ser alterados por `MAX_UPLOAD_BYTES`, `MAX_ZIP_MEMBERS`,
-`MAX_ZIP_MEMBER_BYTES` e `MAX_ZIP_UNCOMPRESSED_BYTES` (500 MiB, 1.000
-entradas, 500 MiB por membro e 1 GiB descompactado, respectivamente).
-Consultas retornam no máximo `MAX_QUERY_RESULT_ROWS` linhas (1.000 por padrão)
-e informam `truncated`/`returnedRows` em `TableData`.
+## Execução
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
+export GOOGLE_API_KEY='sua-chave'
 uvicorn api.main:app --reload
 ```
 
-`GOOGLE_API_KEY` é opcional para iniciar a aplicação. Ela é necessária somente
-para `POST /api/datasets/{dataset_id}/query`.
+Em outro terminal:
 
-Uma consulta é executada pelo `QueryService`, que envia `SYSTEM_PROMPT` e a
-pergunta ao Gemini, executa somente `describe_data`/`query_data` vinculadas ao
-dataset da sessão e reinjeta os resultados no modelo até a resposta final.
-O limite padrão é de 5 iterações, com timeout de 60 segundos por chamada e até
-2 retries do wrapper Gemini. Esses valores podem ser ajustados por
-`MAX_AGENT_ITERATIONS`, `AGENT_REQUEST_TIMEOUT_SECONDS` e `AGENT_RETRIES`.
+```bash
+cd frontend
+npm ci
+npm run dev
+```
 
-Endpoints disponíveis:
+Use `VITE_API_BASE_URL` para apontar o frontend para outro host de API.
 
-- `GET /api/health`
-- `POST /api/datasets` com `multipart/form-data` e campo `file` (`.csv` ou `.zip`)
-- `GET /api/datasets/{dataset_id}`
-- `POST /api/datasets/{dataset_id}/query` com `{"question": "..."}`
+## API e testes
 
-Erros HTTP customizados usam o formato `{"error": {"code": "...", "message": "..."}}`.
-
-Os testes podem ser executados com:
+A API expõe `GET /api/health`, upload `POST /api/datasets`, metadata `GET /api/datasets/{dataset_id}` e consulta `POST /api/datasets/{dataset_id}/query`. Datasets são isolados por UUID e mantidos em memória/`.runtime` até o restart.
 
 ```bash
 pytest -q
+cd frontend
+npm test
+npm run lint
+npm run build
+npm run e2e
 ```
+
+O E2E inicia FastAPI e Vite reais, usa Chromium e não usa mocks de resposta.
+
+## Dicionário no ZIP
+
+Além de um ou mais CSVs, o ZIP pode conter `dicionario.csv` (também aceitos `data_dictionary.csv` e `dictionary.csv`) com as colunas `arquivo`, `coluna` e `descricao`. O arquivo é processado como metadado e não é contado como dataset.
+
+## Arquitetura e entrega
+
+O frontend usa `HttpDataAssistantGateway`; a API cria uma sessão UUID isolada, `DatasetService` carrega os dados e `QueryService` orquestra o agente, que usa `describe_data` e `query_data` sobre o `DataManager` da sessão. Consulte `docs/arquitetura.md`, `docs/api_contract.md` e `docs/challenge_compliance_matrix.md`. O relatório e os artefatos de QA ficam em `deliverables/`.
+
+Limitações conhecidas: registry/datasets efêmeros, sem autenticação e sem persistência após restart.

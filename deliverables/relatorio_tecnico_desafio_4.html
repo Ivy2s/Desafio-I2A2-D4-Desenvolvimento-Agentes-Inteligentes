@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>Relatório Técnico - Desafio 4</title><style>body{font-family:Arial,sans-serif;margin:36px;line-height:1.45;color:#18212b}h1,h2{color:#174c5b}code{background:#eef2f3;padding:2px 4px}img{max-width:100%;border:1px solid #ccd6d8;margin:8px 0}.status{padding:12px;background:#fff0e6;border-left:5px solid #b54d16;font-weight:bold}</style></head>
+<body><h1>Relatório Técnico - Desafio I2A2 D4</h1>
+<div class="status">DELIVERY_BLOCKED: quatro perguntas Gemini consecutivas não foram concluídas por timeout do provedor.</div>
+<h2>Solução</h2><p>O Data Assistent recebe CSV ou ZIP pela Interface A. O FastAPI cria sessão UUID, valida/extrai o conteúdo, reconhece CSVs e <code>dicionario.csv</code>. Na Interface B, a pergunta chega ao QueryService, que orquestra LangChain, Gemini e as tools <code>describe_data</code>/<code>query_data</code>. Respostas estruturadas podem gerar tabela e gráfico no frontend.</p>
+<h2>Arquitetura</h2><p>React → HttpDataAssistantGateway → FastAPI → DatasetService/QueryService → agente LangChain/Gemini → tools → DataManager isolado → QueryResponse → React.</p>
+<h2>Framework e segurança</h2><p>LangChain faz o binding de tools e o loop de mensagens. O prompt exige descoberta dos datasets e proíbe invenções. Há limites de ZIP, proteção contra traversal/symlink, UUID por sessão e nenhuma chave no frontend.</p>
+<h2>Dicionário</h2><p>O fixture contém <code>compras.csv</code>, <code>fornecedores.csv</code> e <code>dicionario.csv</code> com <code>arquivo,coluna,descricao</code>. O dicionário é metadado e não é contado como dataset.</p>
+<h2>QA</h2><ul><li>Backend: 48 passed.</li><li>Frontend: 31 passed, lint e build PASS.</li><li>Playwright Chromium: upload real, erro de formato e query Gemini real PASS.</li><li>Playwright mobile 320 px: PASS.</li></ul><p>A consulta real retornou 7 registros totais, sendo 4 em <code>compras</code> e 3 em <code>fornecedores</code>.</p>
+<h2>Evidências</h2><p>O teste usou <code>setInputFiles</code>, FastAPI e Vite reais, sem mocks.</p><img src="evidence/02-dataset-ready.png" alt="Workspace após upload"><img src="evidence/03-query-real.png" alt="Resposta real do agente">
+<h2>Limitação</h2><p>A primeira pergunta real retornou count 4. A segunda chamada da tentativa de quatro perguntas expirou no provedor Gemini após retries. Portanto não há afirmação manual de respostas, tabela ou gráfico, e a certificação formal permanece bloqueada.</p>
+<h2>Execução</h2><pre>python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn api.main:app --reload
+cd frontend &amp;&amp; npm ci &amp;&amp; npm run dev</pre></body></html>

@@ -13,7 +13,7 @@ export class HttpDataAssistantGateway implements DataAssistantGateway {
   private readonly baseUrl: string
   private readonly fetcher: FetchLike
 
-  constructor(baseUrl = API_BASE_URL, fetcher: FetchLike = fetch) {
+  constructor(baseUrl = API_BASE_URL, fetcher: FetchLike = globalThis.fetch.bind(globalThis)) {
     this.baseUrl = baseUrl.replace(/\/+$/, '')
     this.fetcher = fetcher
   }

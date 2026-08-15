@@ -1,4 +1,5 @@
 from pathlib import Path
+import csv
 from typing import Optional
 
 import pandas as pd
@@ -16,6 +17,7 @@ class DataManager:
         self.data_dir = Path(data_dir)
         self.datasets: dict[str, pd.DataFrame] = {}
         self.dictionary: dict = {}
+        self.provided_descriptions: dict[tuple[str, str], str] = {}
 
     def load(self, source_path: Optional[str] = None):
         if source_path:
@@ -42,9 +44,39 @@ class DataManager:
             self.datasets = CSVLoader.load_directory(str(self.data_dir))
 
         DataValidator.validate_datasets(self.datasets)
-        self.dictionary = DataDictionary.build(self.datasets)
+        self.provided_descriptions = self._load_provided_dictionary()
+        self.dictionary = DataDictionary.build(self.datasets, self.provided_descriptions)
 
         return self.datasets
+
+    def _load_provided_dictionary(self) -> dict[tuple[str, str], str]:
+        """Lê o dicionário opcional fornecido no ZIP sem tratá-lo como dataset."""
+        candidates = [
+            path
+            for path in self.data_dir.rglob("*.csv")
+            if path.stem.lower() in CSVLoader.DICTIONARY_FILENAMES
+        ]
+        if not candidates:
+            return {}
+
+        descriptions: dict[tuple[str, str], str] = {}
+        with candidates[0].open("r", encoding="utf-8-sig", newline="") as source:
+            reader = csv.DictReader(source)
+            required = {"arquivo", "coluna", "descricao"}
+            if not reader.fieldnames or not required.issubset(
+                {field.strip().lower() for field in reader.fieldnames}
+            ):
+                raise ValueError(
+                    "O dicionário deve conter as colunas arquivo, coluna e descricao"
+                )
+            fields = {field.strip().lower(): field for field in reader.fieldnames}
+            for row in reader:
+                dataset = Path(row[fields["arquivo"]].strip()).stem.lower()
+                column = row[fields["coluna"]].strip()
+                description = row[fields["descricao"]].strip()
+                if dataset and column and description:
+                    descriptions[(dataset, column)] = description
+        return descriptions
 
     def describe(self) -> dict:
         """Retorna metadata dos datasets disponíveis."""

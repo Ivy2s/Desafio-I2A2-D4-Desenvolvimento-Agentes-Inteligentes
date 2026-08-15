@@ -92,8 +92,8 @@ Resposta tabular:
 `data` é uma união discriminada por `type`: atualmente `count` ou `table`.
 `truncated` informa quando o limite público de `MAX_QUERY_RESULT_ROWS` foi
 aplicado; `returnedRows` informa a quantidade efetivamente retornada.
-Gráficos não fazem parte do contrato: o frontend poderá derivá-los de
-`TableData` no futuro.
+Gráficos não fazem parte do contrato; o frontend os deriva de `TableData`
+quando há uma dimensão categórica e uma métrica numérica.
 
 ## JSON seguro
 
