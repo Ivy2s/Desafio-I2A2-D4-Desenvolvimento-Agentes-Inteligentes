@@ -38,5 +38,17 @@ class AgentExecutionError(Exception):
     code = "query_execution_error"
 
 
+class UnknownToolError(AgentExecutionError):
+    code = "unknown_tool"
+
+
+class ToolExecutionError(AgentExecutionError):
+    code = "tool_execution_failed"
+
+
+class AgentTimeoutError(AgentExecutionError):
+    code = "agent_timeout"
+
+
 class AgentIterationLimitError(AgentExecutionError):
     code = "agent_iteration_limit"

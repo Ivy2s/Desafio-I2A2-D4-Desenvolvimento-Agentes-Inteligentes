@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from api.main import create_app
 from services.query_service import QueryResult
+from services.exceptions import UnknownToolError
 
 
 CSV = b"name,value\nalpha,10\nbeta,20\n"
@@ -251,6 +252,24 @@ def test_query_uses_structured_application_result(tmp_path):
     )
     assert response.status_code == 200
     assert response.json()["data"]["type"] == "table"
+
+
+def test_query_orchestration_error_has_stable_code(tmp_path):
+    app = create_app(str(tmp_path / "datasets"))
+    client = TestClient(app)
+    dataset_id = upload(client)["datasetId"]
+
+    app.state.query_service = SimpleNamespace(
+        query=lambda received_id, question: (_ for _ in ()).throw(
+            UnknownToolError("Ferramenta desconhecida")
+        )
+    )
+    response = client.post(
+        f"/api/datasets/{dataset_id}/query",
+        json={"question": "consulta"},
+    )
+    assert response.status_code == 502
+    assert response.json()["error"]["code"] == "unknown_tool"
 
 
 def test_query_rejects_blank_question(tmp_path):

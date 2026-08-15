@@ -40,6 +40,13 @@ uvicorn api.main:app --reload
 `GOOGLE_API_KEY` é opcional para iniciar a aplicação. Ela é necessária somente
 para `POST /api/datasets/{dataset_id}/query`.
 
+Uma consulta é executada pelo `QueryService`, que envia `SYSTEM_PROMPT` e a
+pergunta ao Gemini, executa somente `describe_data`/`query_data` vinculadas ao
+dataset da sessão e reinjeta os resultados no modelo até a resposta final.
+O limite padrão é de 5 iterações, com timeout de 60 segundos por chamada e até
+2 retries do wrapper Gemini. Esses valores podem ser ajustados por
+`MAX_AGENT_ITERATIONS`, `AGENT_REQUEST_TIMEOUT_SECONDS` e `AGENT_RETRIES`.
+
 Endpoints disponíveis:
 
 - `GET /api/health`

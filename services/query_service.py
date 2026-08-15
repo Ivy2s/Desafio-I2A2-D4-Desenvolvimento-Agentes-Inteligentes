@@ -1,4 +1,5 @@
 import json
+import logging
 from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
@@ -12,8 +13,13 @@ from services.exceptions import (
     AIUnavailableError,
     AgentExecutionError,
     AgentIterationLimitError,
+    AgentTimeoutError,
+    ToolExecutionError,
+    UnknownToolError,
 )
 from services.session_registry import SessionRegistry
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -23,15 +29,18 @@ class QueryResult:
 
 
 class QueryService:
-    def __init__(self, registry: SessionRegistry, max_iterations: int = 5):
+    def __init__(self, registry: SessionRegistry, max_iterations: int | None = None):
         self.registry = registry
-        self.max_iterations = max_iterations
+        from services.config import MAX_AGENT_ITERATIONS
+
+        self.max_iterations = max_iterations or MAX_AGENT_ITERATIONS
 
     def query(self, dataset_id: UUID, question: str) -> QueryResult:
         session = self.registry.get(dataset_id)
         if not is_ai_configured():
             raise AIUnavailableError("O provedor de IA não está configurado")
 
+        logger.info("agent query started dataset_id=%s", dataset_id)
         tools = build_tools(session.manager)
         tool_map = {tool.name: tool for tool in tools}
         try:
@@ -42,11 +51,16 @@ class QueryService:
             ]
             last_tool_result: dict[str, Any] | None = None
 
-            for _ in range(self.max_iterations):
-                response = agent.invoke(messages)
+            for iteration in range(1, self.max_iterations + 1):
+                logger.info("agent iteration=%d dataset_id=%s", iteration, dataset_id)
+                try:
+                    response = agent.invoke(messages)
+                except TimeoutError as error:
+                    raise AgentTimeoutError("O provedor excedeu o tempo limite") from error
                 messages.append(response)
                 tool_calls = getattr(response, "tool_calls", []) or []
                 if not tool_calls:
+                    logger.info("agent query finished dataset_id=%s", dataset_id)
                     return QueryResult(
                         answer=self._content_as_text(response.content),
                         data=self._result_as_data(last_tool_result),
@@ -55,8 +69,14 @@ class QueryService:
                 for tool_call in tool_calls:
                     tool_name = tool_call["name"]
                     if tool_name not in tool_map:
-                        raise AgentExecutionError(f"Ferramenta desconhecida: {tool_name}")
-                    result = tool_map[tool_name].invoke(tool_call.get("args", {}))
+                        raise UnknownToolError(f"Ferramenta desconhecida: {tool_name}")
+                    logger.info("agent tool=%s dataset_id=%s", tool_name, dataset_id)
+                    try:
+                        result = tool_map[tool_name].invoke(tool_call.get("args", {}))
+                    except Exception as error:
+                        raise ToolExecutionError(
+                            f"Falha ao executar a ferramenta: {tool_name}"
+                        ) from error
                     last_tool_result = result if isinstance(result, dict) else None
                     messages.append(
                         ToolMessage(
@@ -65,10 +85,12 @@ class QueryService:
                         )
                     )
 
+            logger.warning("agent iteration limit dataset_id=%s", dataset_id)
             raise AgentIterationLimitError("O agente excedeu o limite de iterações")
         except (AIUnavailableError, AgentExecutionError):
             raise
         except Exception as error:
+            logger.exception("agent query failed dataset_id=%s", dataset_id)
             raise AgentExecutionError("Falha ao executar a consulta") from error
 
     @staticmethod

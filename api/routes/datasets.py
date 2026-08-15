@@ -79,6 +79,6 @@ def query_dataset(
     except DatasetNotFoundError as error:
         raise HTTPException(status_code=404, detail="Dataset não encontrado") from error
     except AIUnavailableError as error:
-        raise HTTPException(status_code=503, detail=str(error)) from error
+        raise HTTPException(status_code=503, detail={"code": error.code, "message": str(error)}) from error
     except AgentExecutionError as error:
-        raise HTTPException(status_code=502, detail=str(error)) from error
+        raise HTTPException(status_code=502, detail={"code": error.code, "message": str(error)}) from error

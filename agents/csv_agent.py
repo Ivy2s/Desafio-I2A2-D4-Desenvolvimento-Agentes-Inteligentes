@@ -2,7 +2,11 @@ from langchain_core.tools import StructuredTool
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from pipeline.data_manager import DataManager
-from services.config import GOOGLE_API_KEY
+from services.config import (
+    AGENT_REQUEST_TIMEOUT_SECONDS,
+    AGENT_RETRIES,
+    GOOGLE_API_KEY,
+)
 from tools.data_tools import DataQuery, describe_data, query_data
 
 
@@ -41,5 +45,7 @@ def create_agent(
         model="gemini-2.5-flash",
         temperature=0,
         google_api_key=GOOGLE_API_KEY,
+        request_timeout=AGENT_REQUEST_TIMEOUT_SECONDS,
+        retries=AGENT_RETRIES,
     )
     return llm.bind_tools(bound_tools)
