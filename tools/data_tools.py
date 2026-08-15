@@ -3,6 +3,7 @@ from typing import Optional, Literal
 from pydantic import BaseModel, Field
 
 from pipeline.data_manager import DataManager
+from services.config import MAX_QUERY_RESULT_ROWS
 
 
 class DataQuery(BaseModel):
@@ -70,8 +71,10 @@ class DataQuery(BaseModel):
     limit: Optional[int] = Field(
         default=None,
         ge=1,
+        le=MAX_QUERY_RESULT_ROWS,
         description=(
-            "Número máximo de resultados a retornar."
+            "Número máximo de resultados a retornar. O limite público é "
+            f"{MAX_QUERY_RESULT_ROWS}."
         )
     )
 
@@ -82,6 +85,10 @@ def query_data(query: DataQuery, manager: Optional[DataManager] = None):
     """
 
     data_manager = manager or DataManager()
+    effective_limit = query.limit
+    if query.operation in {"list", "aggregate"}:
+        effective_limit = min(query.limit or MAX_QUERY_RESULT_ROWS, MAX_QUERY_RESULT_ROWS)
+
     return data_manager.query(
         operation=query.operation,
         dataset=query.dataset,
@@ -90,7 +97,7 @@ def query_data(query: DataQuery, manager: Optional[DataManager] = None):
         metric=query.metric,
         aggregation=query.aggregation,
         sort=query.sort,
-        limit=query.limit,
+        limit=effective_limit,
     )
 
 

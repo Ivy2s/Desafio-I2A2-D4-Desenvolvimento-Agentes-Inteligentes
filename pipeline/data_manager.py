@@ -107,7 +107,8 @@ class DataManager:
         # ---------------------------------------------------------
 
         if normalized_operation in {"list", "listar"}:
-            rows = df.head(limit if limit else 20).to_dict(
+            effective_limit = limit if limit else 20
+            rows = df.head(effective_limit).to_dict(
                 orient="records"
             )
 
@@ -115,6 +116,8 @@ class DataManager:
                 "dataset": dataset,
                 "operation": "list",
                 "result": rows,
+                "truncated": len(df) > len(rows),
+                "returned_rows": len(rows),
             }
 
         # ---------------------------------------------------------
@@ -213,6 +216,7 @@ class DataManager:
             # LIMIT
             # -----------------------------------------------------
 
+            total_rows = len(grouped)
             if limit:
                 grouped = grouped.head(limit)
 
@@ -222,6 +226,8 @@ class DataManager:
                 "result": grouped.to_dict(
                     orient="records"
                 ),
+                "truncated": total_rows > len(grouped),
+                "returned_rows": len(grouped),
             }
 
         # ---------------------------------------------------------

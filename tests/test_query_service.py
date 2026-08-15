@@ -72,6 +72,8 @@ def test_query_service_runs_tool_loop_and_returns_table(monkeypatch, tmp_path):
         "type": "table",
         "columns": ["name", "value"],
         "rows": [{"name": "alpha", "value": "10"}],
+        "truncated": False,
+        "returnedRows": 1,
     }
     assert fake_tool.calls == [{"operation": "list", "dataset": "dataset"}]
     assert fake_agent.calls[0][0].content.strip().startswith("Você é um agente inteligente")

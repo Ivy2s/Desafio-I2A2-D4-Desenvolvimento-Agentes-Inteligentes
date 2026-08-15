@@ -5,6 +5,8 @@ from types import SimpleNamespace
 from uuid import UUID
 from zipfile import ZipFile, ZipInfo
 
+import numpy as np
+import pandas as pd
 from fastapi.testclient import TestClient
 
 from api.main import create_app
@@ -52,6 +54,11 @@ def test_upload_csv_and_metadata(tmp_path):
     response = client.get(f"/api/datasets/{dataset_id}")
     assert response.status_code == 200
     assert response.json()["datasets"][0]["name"] == "data"
+    assert response.json() == payload
+    assert response.json()["datasets"][0]["columns"] == [
+        {"name": "name", "type": "string"},
+        {"name": "value", "type": "string"},
+    ]
 
 
 def test_upload_zip_with_nested_csv(tmp_path):
@@ -243,7 +250,13 @@ def test_query_uses_structured_application_result(tmp_path):
     app.state.query_service = SimpleNamespace(
         query=lambda received_id, question: QueryResult(
             answer=f"Resposta para {question}",
-            data={"type": "table", "columns": ["name"], "rows": [{"name": "alpha"}],},
+            data={
+                "type": "table",
+                "columns": ["name"],
+                "rows": [{"name": "alpha"}],
+                "truncated": False,
+                "returnedRows": 1,
+            },
         )
     )
     response = client.post(
@@ -272,8 +285,57 @@ def test_query_orchestration_error_has_stable_code(tmp_path):
     assert response.json()["error"]["code"] == "unknown_tool"
 
 
+def test_query_count_response_is_typed(tmp_path):
+    app = create_app(str(tmp_path / "datasets"))
+    client = TestClient(app)
+    dataset_id = upload(client)["datasetId"]
+    app.state.query_service = SimpleNamespace(
+        query=lambda received_id, question: QueryResult(
+            answer="Foram encontrados 2 registros.",
+            data={"type": "count", "value": 2},
+        )
+    )
+    response = client.post(
+        f"/api/datasets/{dataset_id}/query",
+        json={"question": "quantos?"},
+    )
+    assert response.status_code == 200
+    assert response.json()["data"] == {"type": "count", "value": 2}
+
+
+def test_openapi_exposes_contract_schemas(tmp_path):
+    spec = client_for(tmp_path).get("/openapi.json").json()
+    schemas = spec["components"]["schemas"]
+    assert {"HealthResponse", "ErrorResponse", "TableData", "CountData"} <= set(schemas)
+    assert "/api/datasets/{dataset_id}/query" in spec["paths"]
+    query_schema = schemas["QueryResponse"]["properties"]["data"]
+    assert "anyOf" in query_schema
+
+
+def test_json_boundary_normalizes_non_standard_scalars():
+    from services.json_safe import to_json_safe
+
+    value = to_json_safe({
+        "integer": np.int64(3),
+        "float": np.float64(1.5),
+        "nan": np.nan,
+        "infinity": np.inf,
+        "missing": pd.NA,
+        "timestamp": pd.Timestamp("2026-08-14T21:00:00Z"),
+    })
+    assert value == {
+        "integer": 3,
+        "float": 1.5,
+        "nan": None,
+        "infinity": None,
+        "missing": None,
+        "timestamp": "2026-08-14T21:00:00+00:00",
+    }
+
+
 def test_query_rejects_blank_question(tmp_path):
     client = client_for(tmp_path)
     dataset_id = upload(client)["datasetId"]
     response = client.post(f"/api/datasets/{dataset_id}/query", json={"question": "   "})
     assert response.status_code == 422
+    assert response.json()["error"]["code"] == "validation_error"

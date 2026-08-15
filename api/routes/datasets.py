@@ -25,7 +25,13 @@ router = APIRouter(prefix="/api/datasets")
     "",
     response_model=DatasetUploadResponse,
     status_code=status.HTTP_201_CREATED,
-    responses={400: {"model": ErrorResponse}, 413: {"model": ErrorResponse}, 415: {"model": ErrorResponse}},
+    responses={
+        400: {"model": ErrorResponse},
+        413: {"model": ErrorResponse},
+        415: {"model": ErrorResponse},
+        422: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
 )
 async def upload_dataset(request: Request, file: UploadFile = File(...)) -> DatasetUploadResponse:
     try:
@@ -44,7 +50,11 @@ async def upload_dataset(request: Request, file: UploadFile = File(...)) -> Data
 @router.get(
     "/{dataset_id}",
     response_model=DatasetDetailResponse,
-    responses={404: {"model": ErrorResponse}},
+    responses={
+        404: {"model": ErrorResponse},
+        422: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+    },
 )
 def get_dataset(request: Request, dataset_id: UUID) -> DatasetDetailResponse:
     try:

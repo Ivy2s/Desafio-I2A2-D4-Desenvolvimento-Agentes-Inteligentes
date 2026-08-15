@@ -97,9 +97,11 @@ class DatasetService:
             {
                 "name": name,
                 "rows": info["rows"],
-                "columns": info["columns"],
-                "dtypes": info["dtypes"],
-                "sample": info["sample"],
+                "columnCount": len(info["columns"]),
+                "columns": [
+                    {"name": column, "type": _public_type(info["dtypes"].get(column))}
+                    for column in info["columns"]
+                ],
             }
             for name, info in dictionary.items()
         ]
@@ -114,3 +116,18 @@ class DatasetService:
             },
             "datasets": datasets,
         }
+
+
+def _public_type(dtype: str | None) -> str:
+    normalized = (dtype or "").lower()
+    if "datetime" in normalized or "date" in normalized:
+        return "datetime"
+    if "bool" in normalized:
+        return "boolean"
+    if "int" in normalized:
+        return "integer"
+    if "float" in normalized or "double" in normalized:
+        return "number"
+    if normalized in {"object", "string", "str"}:
+        return "string"
+    return "unknown"

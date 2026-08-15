@@ -41,6 +41,7 @@ def create_app(runtime_root: str | None = None) -> FastAPI:
     async def http_exception_handler(request: Request, exc: HTTPException):
         code_by_status = {
             400: "invalid_request",
+            500: "internal_error",
             404: "not_found",
             415: "unsupported_file_type",
             422: "validation_error",

@@ -29,6 +29,8 @@ duplicidades e limites. CSVs em subdiretórios são aceitos. Os limites padrão
 podem ser alterados por `MAX_UPLOAD_BYTES`, `MAX_ZIP_MEMBERS`,
 `MAX_ZIP_MEMBER_BYTES` e `MAX_ZIP_UNCOMPRESSED_BYTES` (500 MiB, 1.000
 entradas, 500 MiB por membro e 1 GiB descompactado, respectivamente).
+Consultas retornam no máximo `MAX_QUERY_RESULT_ROWS` linhas (1.000 por padrão)
+e informam `truncated`/`returnedRows` em `TableData`.
 
 ```bash
 python3 -m venv venv

@@ -9,6 +9,7 @@ from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 from agents.csv_agent import build_tools, create_agent
 from agents.prompts import SYSTEM_PROMPT
 from services.config import is_ai_configured
+from services.json_safe import to_json_safe
 from services.exceptions import (
     AIUnavailableError,
     AgentExecutionError,
@@ -111,8 +112,19 @@ class QueryService:
         operation = result.get("operation")
         value = result.get("result")
         if operation == "count":
-            return {"type": "count", "value": value}
+            return {"type": "count", "value": int(to_json_safe(value))}
         if isinstance(value, list):
-            columns = list(value[0].keys()) if value else []
-            return {"type": "table", "columns": columns, "rows": value}
+            rows = to_json_safe(value)
+            columns = []
+            for row in rows:
+                for column in row:
+                    if column not in columns:
+                        columns.append(column)
+            return {
+                "type": "table",
+                "columns": columns,
+                "rows": rows,
+                "truncated": bool(result.get("truncated", False)),
+                "returnedRows": int(result.get("returned_rows", len(rows))),
+            }
         return None
