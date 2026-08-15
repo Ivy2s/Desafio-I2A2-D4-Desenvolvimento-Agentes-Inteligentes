@@ -70,3 +70,55 @@ test('consulta real usa o endpoint do agente quando a IA está configurada', asy
   await expect(page.locator('.result-answer')).toContainText(/[34]/)
   await page.screenshot({ path: '../deliverables/evidence/03-query-real.png', fullPage: true })
 })
+
+async function openRealWorkspace(page: import('@playwright/test').Page) {
+  await page.goto('/')
+  const health = await page.request.get('http://127.0.0.1:18000/api/health')
+  test.skip(!(await health.json()).aiConfigured, 'REAL_AGENT_E2E = NOT_RUN_NO_CREDENTIAL')
+  await page.locator('input[type="file"]').setInputFiles(zipPath)
+  await page.getByRole('button', { name: /iniciar upload/i }).click()
+  await page.getByRole('button', { name: 'Explorar dados' }).click()
+  await expect(page.getByRole('heading', { name: 'O que você quer descobrir?' })).toBeVisible({ timeout: 120000 })
+}
+
+async function askRealQuestion(page: import('@playwright/test').Page, question: string) {
+  const queryRequest = page.waitForRequest((request) => request.url().includes('/api/datasets/') && request.url().endsWith('/query'))
+  await page.locator('#query-input').fill(question)
+  await page.locator('#query-input').press('Enter')
+  await queryRequest
+  await expect(page.getByText('análise concluída')).toHaveCount(1, { timeout: 60000 })
+  return page.locator('.analysis-result').first()
+}
+
+test('resposta real de contagem', async ({ page }) => {
+  await openRealWorkspace(page)
+  const countResult = await askRealQuestion(page, 'Quantos registros existem no dataset compras?')
+  await expect(countResult).toContainText('4')
+  await page.screenshot({ path: '../deliverables/evidence/03-query-count.png', fullPage: true })
+})
+
+test('resposta real em tabela e gráfico', async ({ page }) => {
+  await openRealWorkspace(page)
+  const totalsResult = await askRealQuestion(page, 'Para o dataset compras, calcule a soma da coluna valor agrupada pela coluna fornecedor.')
+  await expect(totalsResult).toContainText(/3[.\s]500/)
+  await expect(totalsResult).toContainText('Alfa')
+  await expect(totalsResult.locator('table')).toBeVisible()
+  await expect(totalsResult.locator('svg[role="img"]')).toBeVisible()
+  await page.screenshot({ path: '../deliverables/evidence/04-query-table-chart.png', fullPage: true })
+})
+
+test('resposta real em lista tabular', async ({ page }) => {
+  await openRealWorkspace(page)
+  const listResult = await askRealQuestion(page, 'Liste as linhas do dataset compras ordenadas pela coluna valor.')
+  await expect(listResult.locator('table')).toBeVisible()
+  await expect(listResult).toContainText(/(?:2[.\s]500|2500)/)
+  await expect(listResult).toContainText('Monitor')
+  await page.screenshot({ path: '../deliverables/evidence/05-query-list.png', fullPage: true })
+})
+
+test('quarta resposta real em dataset secundário', async ({ page }) => {
+  await openRealWorkspace(page)
+  const secondaryResult = await askRealQuestion(page, 'Quantos registros existem no dataset fornecedores?')
+  await expect(secondaryResult).toContainText('3')
+  await page.screenshot({ path: '../deliverables/evidence/06-query-maximum.png', fullPage: true })
+})

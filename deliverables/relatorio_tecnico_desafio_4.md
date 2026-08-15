@@ -1,42 +1,48 @@
 # Relatório Técnico - Desafio I2A2 D4
 
-## Solução
+## Solução e arquitetura
 
-O Data Assistent recebe CSV ou ZIP pela Interface A. O FastAPI cria uma sessão
-UUID, valida e extrai o conteúdo, reconhece CSVs e um eventual `dicionario.csv`.
-Na Interface B, a pergunta natural é enviada ao `QueryService`, que executa um
-agente LangChain com `ChatGoogleGenerativeAI` e as tools `describe_data` e
-`query_data`. O resultado retorna como texto ou resposta estruturada e o
-frontend deriva tabela e gráfico quando apropriado.
+O Data Assistent recebe CSV ou ZIP pela Interface A. O FastAPI cria uma sessão UUID, valida e extrai o conteúdo, reconhece CSVs e `dicionario.csv`. Na Interface B, a pergunta natural chega ao `QueryService`, que orquestra um agente LangChain com `ChatGoogleGenerativeAI` ou `ChatGroq`, conforme configuração. As tools `describe_data` e `query_data` consultam somente o `DataManager` da sessão. O resultado retorna como texto ou contrato estruturado; o frontend deriva tabela e gráfico quando apropriado.
+
+```mermaid
+flowchart TD
+  A[React Interface A] --> G[HttpDataAssistantGateway] --> API[FastAPI]
+  API --> DS[DatasetService / Pipeline]
+  API --> QS[QueryService]
+  QS --> AG[LangChain Gemini ou Groq]
+  AG --> T[describe_data / query_data]
+  T --> DM[DataManager UUID]
+  DM --> P[Pandas / CSV]
+  QS --> R[QueryResponse]
+  R --> B[React Interface B: texto, tabela, gráfico]
+```
 
 ## Framework e agente
 
-LangChain foi usado para o binding de tools e o loop de mensagens do agente.
-`SYSTEM_PROMPT` exige descoberta do dataset antes da consulta e proíbe inventar
-colunas ou dados. O serviço aplica limite de iterações, timeout e retries.
-`DataManager` é sempre o da sessão UUID ativa.
+LangChain faz o binding de tools e o loop de mensagens. O `SYSTEM_PROMPT` exige descoberta do dataset, nomes exatos de colunas e proíbe invenção de dados. O serviço aplica limite de iterações, timeout, retries e serialização JSON segura. A chave permanece somente no backend.
 
-## Dicionário
+## ZIP e dicionário
 
-O ZIP de certificação contém `compras.csv`, `fornecedores.csv` e
-`dicionario.csv`. O dicionário usa `arquivo,coluna,descricao`; é processado como
-metadado, não como CSV consultável. A cobertura está em
-`tests/test_pipeline.py` e `tests/test_api.py`.
+O fixture de certificação contém `compras.csv`, `fornecedores.csv` e `dicionario.csv`, com `arquivo,coluna,descricao`. O dicionário é reconhecido e processado como metadado, não contado como dataset consultável. Traversal, symlink, limites e caminhos Windows/Unix são testados no backend.
 
-## QA e evidências
+## Quatro perguntas reais
 
-Backend: 48 testes aprovados. Frontend: 31 testes aprovados, lint e build
-aprovados. Playwright Chromium e mobile 320 px aprovaram upload real, transição
-de interface, formato inválido e uma pergunta Gemini real. A aplicação retornou
-count 4 para o fixture de quatro registros.
+Todas foram feitas pelo navegador Playwright contra FastAPI real e agente Groq real, sem interceptação de sucesso:
 
-## Limitação de certificação
+| # | Pergunta | Esperado | Aplicação | Formato |
+| --- | --- | --- | --- | --- |
+| 1 | Quantos registros existem no dataset compras? | 4 | 4 | Texto/count |
+| 2 | Soma de `valor` por `fornecedor` em compras | Alfa 3500; Beta 1500; Gamma 1000 | Mesmos valores | Texto + tabela + gráfico |
+| 3 | Liste as linhas de compras ordenadas por `valor` | Monitor/2500 no topo | Tabela real | Tabela |
+| 4 | Quantos registros existem em fornecedores? | 3 | 3 | Texto/count |
 
-O segundo request da tentativa de quatro perguntas reais expirou no provedor
-Gemini. Por isso este documento registra `DELIVERY_BLOCKED`, não inventa
-respostas e não afirma tabela/gráfico real certificados. Para concluir, execute
-`cd frontend && npm run e2e` com uma credencial Gemini estável, registre quatro
-perguntas e suas respostas, atualize a matriz, gere o PDF e marque o checklist.
+As respostas foram calculadas independentemente a partir da fixture e comparadas com os valores renderizados.
+
+## QA e limitações
+
+Backend: 49 testes aprovados. Frontend: 31 testes aprovados, lint e build aprovados. Os cenários Playwright seriais de upload, dicionário e quatro perguntas reais passaram; a execução completa desktop/mobile terminou `9 passed / 5 failed` por `429 RateLimit` externo do Groq. O Gemini configurado retornou `404 NOT_FOUND` para os modelos testados. Por isso o estado formal é **DELIVERY_BLOCKED**, embora os requisitos funcionais tenham evidência via Groq suportado.
+
+Limitações do MVP: registry em memória, datasets perdidos após restart, histórico local e ausência de autenticação/persistência.
 
 ## Execução
 
@@ -45,9 +51,13 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn api.main:app --reload
-cd frontend && npm ci && npm run dev
+cd frontend
+npm ci
+npm run dev
+npm test
+npm run lint
+npm run build
+AI_PROVIDER=groq GROQ_MODEL=llama-3.1-8b-instant npm run e2e
 ```
 
-`GOOGLE_API_KEY` fica somente no backend; `VITE_API_BASE_URL` aponta para a API.
-O agente respondeu uma consulta real com 7 registros totais, sendo 4 em
-`compras` e 3 em `fornecedores`.
+`GOOGLE_API_KEY`/`GROQ_API_KEY` ficam somente no backend; `VITE_API_BASE_URL` aponta para a API. Nenhuma chave é colocada no Git.

@@ -7,7 +7,7 @@ flowchart TD
   API --> DS[DatasetService]
   API --> QS[QueryService]
   DS --> P[Pipeline: ZIP, CSV, dicionário, validação]
-  QS --> AG[LangChain + Gemini agent]
+  QS --> AG[LangChain + Gemini/Groq agent]
   AG --> T[describe_data / query_data]
   T --> DM[DataManager da sessão UUID]
   DM --> D[(Pandas CSVs)]
@@ -21,4 +21,5 @@ descrições são incorporadas ao `describe_data`.
 
 O agente recebe `SYSTEM_PROMPT`, escolhe `describe_data` ou `query_data`, recebe
 o resultado da ferramenta e produz a resposta final. `QueryService` limita
-iterações, timeout e retries. A UI nunca recebe a chave do Gemini.
+iterações, timeout e retries. Gemini é o perfil padrão e Groq é um provedor
+alternativo configurável. A UI nunca recebe nenhuma chave.

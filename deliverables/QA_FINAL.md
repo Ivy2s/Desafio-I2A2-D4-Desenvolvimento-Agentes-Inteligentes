@@ -2,46 +2,52 @@
 
 ## Ambiente
 
-- Linux; Python 3.12.3; Node/npm conforme ambiente local.
-- Chromium Playwright 151.0.7922.34.
-- A chave Gemini está em `.env` ignorado e não foi versionada.
+- Linux; Python 3.12.3; Node/npm local; Chromium Playwright 151.0.7922.34.
+- Backend e Vite foram iniciados pelo `playwright.config.ts`.
+- `.env` é ignorado e as chaves não foram versionadas.
 
 ## Git
 
 - Branch: `feat/frontend-ui`
-- HEAD inicial: `7196eec chore(frontend): remove production mocks and polish integration`
-- HEAD final: `f5747db chore: finalize challenge QA and delivery package`
+- HEAD inicial: `6351c82 docs: record Groq E2E evidence`
+- HEAD final: será registrado após o commit local
 - Push/PR: não realizados
 
 ## Suítes
 
-- Backend: `python3 -m pytest -q` -> `48 passed`.
+- Backend: `python3 -m pytest -q` -> `49 passed`.
 - Frontend: Vitest `31 passed`; lint PASS; build PASS.
-- Playwright Chromium: houve execução estável com 3 passed, incluindo upload ZIP+dicionário, formato inválido e uma query Gemini real; a repetição final terminou 2 passed/1 failed por quota Gemini 429.
-- Playwright mobile 320 px: upload e formato inválido passaram; a consulta real também fica condicionada à quota externa.
-- Groq: uma consulta real passou com `AI_PROVIDER=groq`; a tentativa de quatro consultas consecutivas expirou na segunda chamada.
+- `pip check`: FAIL por dependência global externa (`repolib` requer `gnupg`), não usada pelo projeto.
 - `npm audit --audit-level=moderate`: 0 vulnerabilidades.
-- `pip check`: dependência global externa (`repolib` requer `gnupg`); requisitos do projeto instalados.
+- Playwright core serial com Chromium/Groq `llama-3.1-8b-instant`: upload, dicionário e quatro perguntas reais passaram individualmente.
+- Playwright completo Chromium + mobile 320: `9 passed`, `5 failed`; falhas por `429 RateLimit` do provedor Groq durante concorrência e não por mock ou fallback.
 
-## Evidências
+## Evidências reais
 
-O E2E usa `setInputFiles`, FastAPI real, Vite real e nenhum mock de sucesso.
-O count real retornou 7 registros totais, incluindo 4 em `compras`. A tentativa de executar quatro
-perguntas reais consecutivas expirou no segundo request Gemini, portanto as
-quatro respostas, tabela e gráfico não têm evidência real suficiente.
+O E2E usa `setInputFiles`, FastAPI real, Vite real e nenhum mock de sucesso. O ZIP contém `compras.csv`, `fornecedores.csv` e `dicionario.csv`. As quatro perguntas foram executadas em cenários Playwright independentes:
 
-## Segurança e qualidade
+| Pergunta | Esperado | Aplicação | Resultado |
+| --- | --- | --- | --- |
+| Registros em `compras` | 4 | 4 | PASS |
+| Soma de `valor` por `fornecedor` | Alfa 3500, Beta 1500, Gamma 1000 | Valores exibidos em texto/tabela | PASS |
+| Linhas de `compras` ordenadas por `valor` | Monitor 2500 no topo | Tabela real com Monitor/2500 | PASS |
+| Registros em `fornecedores` | 3 | 3 | PASS |
 
-Traversal, symlink, limites ZIP, isolamento, UUID, validação e limpeza estão
-cobertos por backend. `.env`, `node_modules`, `.runtime` e caches não entram no
-Git/ZIP de código. O frontend mantém a chave apenas no backend.
+## Formatos e UX
 
-## Status
+- Texto: PASS, resposta `answer` e contagens reais.
+- Tabela: PASS, headers/linhas reais em `DataTable`.
+- Gráfico: PASS, SVG derivado da resposta tabular de agregação.
+- Interface A/B, ZIP, erro de extensão, loading, endpoint real e mobile 320 foram exercitados.
 
-`DELIVERY_BLOCKED`
+## Segurança
 
-Bloqueio objetivo: a credencial atingiu quota gratuita Gemini (`429
-ResourceExhausted`) ao repetir as consultas. É necessário usar credencial/quota
-estável, repetir as quatro perguntas e capturar respostas reais de texto, tabela
-e gráfico. Não declarar
-`REAL_GEMINI_E2E = PASS` enquanto isso não ocorrer.
+Traversal, symlink, limites ZIP, isolamento UUID, validação, limpeza, erros de API e ausência de segredo no frontend estão cobertos pelo backend. O ZIP final não inclui `.env`, `.git`, `node_modules`, ambientes virtuais ou caches.
+
+## Gemini e bloqueio formal
+
+`REAL_GEMINI_E2E = FAIL`. A credencial Gemini presente retornou `404 NOT_FOUND` para `gemini-2.5-flash` e `gemini-2.0-flash`, modelos indisponíveis para a conta/API atual. O agente real foi comprovado via provedor Groq suportado, mas a suíte completa também atingiu limite `429` em execução concorrente. Portanto o estado formal é `DELIVERY_BLOCKED`, sem afirmar certificação Gemini.
+
+## Artefatos
+
+`docs/challenge_compliance_matrix.md`, `deliverables/relatorio_tecnico_desafio_4.md`, PDF, `CHECKLIST_ENTREGA.md`, screenshots em `deliverables/evidence/` e ZIP de código-fonte.

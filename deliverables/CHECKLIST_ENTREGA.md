@@ -8,7 +8,9 @@
 - [x] Evidências de upload, workspace e query real
 - [x] Auditoria de secrets e segurança
 - [x] Fonte do relatório Markdown
-- [ ] Relatório PDF certificado
-- [ ] Quatro perguntas reais aprovadas
+- [x] Relatório PDF gerado, certificação bloqueada por provedor
+- [x] Quatro perguntas reais aprovadas serialmente via Groq
 - [ ] `DELIVERY_CERTIFIED`
 - [x] Sem push/PR automático
+- [ ] `REAL_GEMINI_E2E = PASS`
+- [ ] Suíte Playwright completa sem falhas de quota
