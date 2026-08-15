@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { HttpDataAssistantGateway } from './httpDataAssistantGateway'
 import { DataAssistantApiError } from './http/dataAssistantApiError'
+import { dataAssistantGateway } from './dataAssistantGateway'
 
 const datasetResponse = {
   datasetId: 'abc', status: 'ready', createdAt: '2026-08-14T21:00:00Z',
@@ -12,6 +13,10 @@ const response = (body: unknown, status = 200) => new Response(JSON.stringify(bo
 const gatewayWith = (handler: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) => new HttpDataAssistantGateway('http://api.test/', handler)
 
 describe('HttpDataAssistantGateway', () => {
+  it('is the application gateway used for the real upload and query flow', () => {
+    expect(dataAssistantGateway).toBeInstanceOf(HttpDataAssistantGateway)
+  })
+
   it('uploads with FormData and adapts the dataset response', async () => {
     const fetcher = vi.fn(async (_input, init) => {
       expect(init?.method).toBe('POST')

@@ -21,18 +21,18 @@ npm run lint
 Os componentes conhecem somente os contratos em `src/contracts/` e recebem a implementação pela composição em `src/services/dataAssistantGateway.ts`:
 
 ```text
-UI features -> DataAssistantGateway -> MockDataAssistantGateway
-                             -> HttpDataAssistantGateway -> FastAPI
+UI features -> DataAssistantGateway -> HttpDataAssistantGateway -> FastAPI
+                                      MockDataAssistantGateway (testes/offline)
                              -> HttpDataAssistantGateway -> FastAPI
 ```
 
 `MockDataAssistantGateway` é usado apenas durante o desenvolvimento da UI. Ele simula upload, processamento, latência, erros recuperáveis e cinco consultas de demonstração. O mock não representa processamento real e não usa LLM.
 
-`HttpDataAssistantGateway` implementa upload, metadata, consulta e health sobre a API FastAPI. O gateway composto usado pela aplicação envia upload e metadata por HTTP, enquanto mantém consultas no mock até a Implementação 8. Ele usa `VITE_API_BASE_URL`, com default `http://127.0.0.1:8000`. Nenhum `fetch()` está espalhado pelos componentes.
+`HttpDataAssistantGateway` implementa upload, metadata, consulta e health sobre a API FastAPI. A aplicação usa essa implementação para upload e consultas; `MockDataAssistantGateway` permanece disponível para testes e desenvolvimento offline. Ele usa `VITE_API_BASE_URL`, com default `http://127.0.0.1:8000`. Nenhum `fetch()` está espalhado pelos componentes.
 
 ## API local
 
-Inicie o backend com `uvicorn api.main:app --host 127.0.0.1 --port 8000`, mantenha `VITE_API_BASE_URL=http://127.0.0.1:8000` (ou configure outro endereço) e rode `npm run dev`. O upload da interface usa a API real; consultas continuam simuladas até a próxima implementação.
+Inicie o backend com `uvicorn api.main:app --host 127.0.0.1 --port 8000`, mantenha `VITE_API_BASE_URL=http://127.0.0.1:8000` (ou configure outro endereço) e rode `npm run dev`. Uploads e consultas da interface usam a API real. Consultas exigem `GOOGLE_API_KEY` configurada no backend; sem ela, a API retorna indisponibilidade controlada. O histórico permanece apenas no estado React e é perdido após reload.
 
 ## Estrutura principal
 

@@ -3,6 +3,9 @@ import type { DatasetSummary, QueryResponse, UploadState } from '../contracts/da
 import { DatasetSummary as DatasetSummaryPanel } from '../features/dataset/DatasetSummary'
 import { AnalysisResult } from '../features/query/AnalysisResult'
 import { QueryComposer } from '../features/query/QueryComposer'
+import { QueryErrorResult } from '../features/query/QueryErrorResult'
+import { canSubmitQuery, normalizeQuestion } from '../features/query/queryRules'
+import { getQueryErrorMessage } from '../features/query/queryErrorMessage'
 import { SuggestedQuestions } from '../features/query/SuggestedQuestions'
 import { UploadDropzone } from '../features/upload/UploadDropzone'
 import { UploadSteps } from '../features/upload/UploadSteps'
@@ -10,7 +13,7 @@ import { DataAssistantApiError } from '../services/http/dataAssistantApiError'
 import { dataAssistantGateway } from '../services/dataAssistantGateway'
 import './app.css'
 
-interface HistoryItem { id: string; result: QueryResponse }
+interface HistoryItem { id: string; datasetId: string; question: string; result?: QueryResponse; error?: string }
 
 function Brand() {
   return <a className="brand" href="/" aria-label="Data Assistent início"><span className="brand__mark" aria-hidden="true"><i /><i /><i /></span><span>Data Assistent</span></a>
@@ -65,23 +68,39 @@ function App() {
     setQueryError(undefined)
   }
 
-  const submitQuestion = async (value: string) => {
-    if (!dataset || querying || !value.trim()) return
-    setQuestion(value)
-    setQueryError(undefined)
+  const runQuery = async (historyId: string, datasetId: string, value: string) => {
     setQuerying(true)
+    setQueryError(undefined)
     try {
-      const result = await dataAssistantGateway.queryDataset({ datasetId: dataset.id, question: value.trim() })
-      setHistory((current) => [{ id: result.id, result }, ...current])
+      const result = await dataAssistantGateway.queryDataset({ datasetId, question: value })
+      setHistory((current) => current.map((item) => item.id === historyId ? { ...item, result, error: undefined } : item))
       setQuestion('')
     } catch (error) {
-      setQueryError(error instanceof Error ? error.message : 'Não foi possível concluir a consulta.')
+      const message = getQueryErrorMessage(error)
+      setHistory((current) => current.map((item) => item.id === historyId ? { ...item, error: message } : item))
+      setQueryError(message)
     } finally {
       setQuerying(false)
     }
   }
 
-  if (view === 'workspace' && dataset) return <Workspace dataset={dataset} question={question} querying={querying} queryError={queryError} history={history} onQuestionChange={setQuestion} onSubmit={submitQuestion} onLoadAnother={resetUpload} />
+  const submitQuestion = (value: string) => {
+    const activeDataset = dataset
+    if (!canSubmitQuery(activeDataset?.id, value, querying) || !activeDataset) return
+    const trimmedQuestion = normalizeQuestion(value)
+    const historyId = crypto.randomUUID()
+    setQuestion(trimmedQuestion)
+    setHistory((current) => [{ id: historyId, datasetId: activeDataset.id, question: trimmedQuestion }, ...current])
+    void runQuery(historyId, activeDataset.id, trimmedQuestion)
+  }
+
+  const retryQuestion = (item: HistoryItem) => {
+    if (!dataset || querying || item.datasetId !== dataset.id) return
+    setHistory((current) => current.map((entry) => entry.id === item.id ? { ...entry, error: undefined } : entry))
+    void runQuery(item.id, item.datasetId, item.question)
+  }
+
+  if (view === 'workspace' && dataset) return <Workspace dataset={dataset} question={question} querying={querying} queryError={queryError} history={history} onQuestionChange={setQuestion} onSubmit={submitQuestion} onRetry={retryQuestion} onLoadAnother={resetUpload} />
 
   return <main className="app-shell upload-screen">
     <header className="topbar"><Brand /></header>
@@ -102,12 +121,12 @@ function getUploadErrorMessage(error: unknown) {
   return error.message
 }
 
-interface WorkspaceProps { dataset: DatasetSummary; question: string; querying: boolean; queryError?: string; history: HistoryItem[]; onQuestionChange: (value: string) => void; onSubmit: (question: string) => void; onLoadAnother: () => void }
+interface WorkspaceProps { dataset: DatasetSummary; question: string; querying: boolean; queryError?: string; history: HistoryItem[]; onQuestionChange: (value: string) => void; onSubmit: (question: string) => void; onRetry: (item: HistoryItem) => void; onLoadAnother: () => void }
 
-function Workspace({ dataset, question, querying, queryError, history, onQuestionChange, onSubmit, onLoadAnother }: WorkspaceProps) {
+function Workspace({ dataset, question, querying, queryError, history, onQuestionChange, onSubmit, onRetry, onLoadAnother }: WorkspaceProps) {
   return <main className="app-shell workspace-screen"><header className="topbar"><Brand /><div className="active-dataset"><span className="status-dot" /> <span className="active-dataset__name">{dataset.name}</span><span className="ready-label">ready</span></div><button className="text-button topbar__action" onClick={onLoadAnother}>carregar outro dataset <span aria-hidden="true">↗</span></button></header>
     <div className="workspace-layout"><aside className="dataset-sidebar" aria-labelledby="context-title"><div className="sidebar-heading"><span className="step-label">dataset ativo</span><span className="ready-status"><span className="status-dot" /> pronto</span></div><h1 id="context-title">{dataset.name}</h1><p className="sidebar-description">Dados de notas fiscais preparados para consulta.</p><dl className="sidebar-metrics"><div><dt>arquivos CSV</dt><dd>{dataset.csvFiles.length}</dd></div><div><dt>registros</dt><dd>{dataset.records.toLocaleString('pt-BR')}</dd></div><div><dt>colunas</dt><dd>{dataset.columns}</dd></div></dl><div className="sidebar-files"><p>arquivos detectados</p>{dataset.csvFiles.map((file) => <span key={file}><i className="csv-mark">CSV</i>{file}</span>)}</div><div className="sidebar-note"><span className="note-mark">i</span><p>As respostas desta sessão usam apenas o dataset ativo.</p></div></aside>
-      <section className="query-area" aria-labelledby="query-title"><div className="query-intro"><p className="eyebrow"><span className="eyebrow__line" /> consulta natural</p><h2 id="query-title">O que você quer<br /><em>descobrir?</em></h2><p>Faça uma pergunta e receba uma leitura baseada nos seus dados.</p></div><QueryComposer value={question} busy={querying} error={queryError} onChange={onQuestionChange} onSubmit={onSubmit} />{querying && <div className="query-loading" role="status" aria-live="polite"><span className="loading-bars"><i /><i /><i /></span><span>Analisando dados</span><small>organizando uma resposta demonstrativa</small></div>}{history.length === 0 && !querying && <SuggestedQuestions onSelect={(value) => { onQuestionChange(value); onSubmit(value) }} />}{history.length > 0 && <section className="results" aria-labelledby="results-title"><div className="results-heading"><span id="results-title">Histórico da sessão</span><span>{history.length} {history.length === 1 ? 'consulta' : 'consultas'}</span></div>{history.map((item) => <AnalysisResult key={item.id} result={item.result} />)}</section>}</section>
+       <section className="query-area" aria-labelledby="query-title"><div className="query-intro"><p className="eyebrow"><span className="eyebrow__line" /> consulta natural</p><h2 id="query-title">O que você quer<br /><em>descobrir?</em></h2><p>Faça uma pergunta e receba uma leitura baseada nos seus dados.</p></div><QueryComposer value={question} busy={querying} error={queryError} onChange={onQuestionChange} onSubmit={onSubmit} />{querying && <div className="query-loading" role="status" aria-live="polite"><span className="loading-bars"><i /><i /><i /></span><span>Analisando dados</span><small>aguarde a resposta do servidor</small></div>}{history.length === 0 && !querying && <SuggestedQuestions onSelect={(value) => { onQuestionChange(value); onSubmit(value) }} />}{history.length > 0 && <section className="results" aria-labelledby="results-title"><div className="results-heading"><span id="results-title">Histórico da sessão</span><span>{history.length} {history.length === 1 ? 'consulta' : 'consultas'}</span></div>{history.map((item) => item.result ? <AnalysisResult key={item.id} result={item.result} /> : item.error ? <QueryErrorResult key={item.id} question={item.question} message={item.error} onRetry={() => onRetry(item)} disabled={querying} /> : <article key={item.id} className="analysis-result" aria-label="Consulta em andamento"><div className="result-kicker"><span className="result-icon">…</span><span>analisando consulta</span></div><h3>{item.question}</h3></article>)}</section>}</section>
      </div><footer className="footer"><span>Data Assistent</span><span className="footer__detail">mock de desenvolvimento · sem conexão externa</span></footer>
   </main>
 }
