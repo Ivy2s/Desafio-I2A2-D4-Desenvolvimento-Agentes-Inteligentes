@@ -15,7 +15,7 @@ const formatSize = (bytes: number) => bytes < 1024 * 1024 ? `${Math.max(1, Math.
 
 export function UploadDropzone({ state, file, error, onFile, onStart, onRemove, onDragState }: UploadDropzoneProps) {
   const inputRef = useRef<HTMLInputElement>(null)
-  const isBusy = state === 'validating' || state === 'uploading' || state === 'processing'
+  const isBusy = state === 'uploading'
 
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault()

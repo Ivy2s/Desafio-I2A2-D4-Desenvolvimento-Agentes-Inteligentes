@@ -5,7 +5,7 @@ interface UploadStepsProps { state: UploadState }
 const stepForState = (state: UploadState) => {
   if (state === 'idle' || state === 'drag-active' || state === 'invalid-file' || state === 'error') return 1
   if (state === 'selected') return 1
-  if (state === 'uploading' || state === 'processing') return 2
+  if (state === 'uploading') return 2
   return 3
 }
 

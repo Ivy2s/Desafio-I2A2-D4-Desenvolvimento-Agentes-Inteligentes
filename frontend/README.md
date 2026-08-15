@@ -21,20 +21,16 @@ npm run lint
 Os componentes conhecem somente os contratos em `src/contracts/` e recebem a implementação pela composição em `src/services/dataAssistantGateway.ts`:
 
 ```text
-UI features -> DataAssistantGateway -> HttpDataAssistantGateway -> FastAPI
-                                      MockDataAssistantGateway (testes/offline)
-                             -> HttpDataAssistantGateway -> FastAPI
+React features -> DataAssistantGateway -> HttpDataAssistantGateway -> FastAPI
 ```
 
-`MockDataAssistantGateway` é usado apenas durante o desenvolvimento da UI. Ele simula upload, processamento, latência, erros recuperáveis e cinco consultas de demonstração. O mock não representa processamento real e não usa LLM.
+`HttpDataAssistantGateway` é o único gateway disponível no fluxo da aplicação e implementa upload, metadata, consulta e health sobre a API FastAPI. Ele usa `VITE_API_BASE_URL`, com default `http://127.0.0.1:8000`; nenhum `fetch()` está espalhado pelos componentes.
 
-`HttpDataAssistantGateway` implementa upload, metadata, consulta e health sobre a API FastAPI. O fluxo normal usa essa implementação para upload, metadata e consultas; `MockDataAssistantGateway` permanece disponível para testes e desenvolvimento offline. Ele usa `VITE_API_BASE_URL`, com default `http://127.0.0.1:8000`. Nenhum `fetch()` está espalhado pelos componentes.
-
-As respostas seguem o contrato `QueryResponse`: `answer` é renderizado como texto seguro, `count` como indicador quantitativo e `table` como tabela responsiva. Gráficos de barras e linhas são derivados deterministicamente no frontend a partir da tabela, sem configuração visual do backend ou do LLM. A tabela permanece disponível como fonte visual primária e o histórico mantém os dados de cada resposta separadamente.
+As respostas seguem o contrato `QueryResponse`: `answer` é renderizado como texto seguro, `count` como indicador quantitativo e `table` como tabela responsiva. Gráficos de barras e linhas são derivados deterministicamente no frontend a partir da tabela, sem configuração visual do backend ou do LLM. A tabela permanece disponível como fonte visual primária e o histórico mantém os dados de cada resposta separadamente. Ao carregar um novo dataset com sucesso, o histórico local é limpo; se o upload falhar, o dataset anterior permanece preservado.
 
 ## API local
 
-Inicie o backend com `uvicorn api.main:app --host 127.0.0.1 --port 8000`, mantenha `VITE_API_BASE_URL=http://127.0.0.1:8000` (ou configure outro endereço) e rode `npm run dev`. Uploads e consultas da interface usam a API real. Consultas exigem `GOOGLE_API_KEY` configurada no backend; sem ela, a API retorna indisponibilidade controlada. O histórico permanece apenas no estado React e é perdido após reload.
+Inicie o backend com `uvicorn api.main:app --host 127.0.0.1 --port 8000`, mantenha `VITE_API_BASE_URL=http://127.0.0.1:8000` (ou configure outro endereço) e rode `npm run dev`. Upload, metadata e consultas usam exclusivamente a API real; falhas de rede não ativam fallback local. Consultas exigem `GOOGLE_API_KEY` configurada no backend; sem ela, a API retorna indisponibilidade controlada. O registry do backend é efêmero e o histórico permanece apenas no estado React, sendo perdido após reload ou troca bem-sucedida de dataset.
 
 ## Estrutura principal
 
@@ -44,4 +40,3 @@ Inicie o backend com `uvicorn api.main:app --host 127.0.0.1 --port 8000`, manten
 - `src/features/dataset/`: resumo do dataset pronto
 - `src/features/query/`: composer, sugestões, histórico, tabelas e gráficos
 - `src/services/`: composição do gateway usado pela aplicação
-- `src/mocks/`: fixtures determinísticas de desenvolvimento

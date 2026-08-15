@@ -8,8 +8,8 @@ describe('query error messages', () => {
     expect(getQueryErrorMessage(new DataAssistantApiError('dataset_not_found', 'raw', 404))).toContain('não está mais disponível')
   })
 
-  it('maps network failures and preserves unknown human messages', () => {
+  it('maps network failures and hides unknown technical messages', () => {
     expect(getQueryErrorMessage(new DataAssistantApiError('network_error', 'raw', 0))).toContain('conectar')
-    expect(getQueryErrorMessage(new DataAssistantApiError('other', 'Mensagem útil', 500))).toBe('Mensagem útil')
+    expect(getQueryErrorMessage(new DataAssistantApiError('other', 'TypeError: raw stack', 500))).toContain('concluir')
   })
 })

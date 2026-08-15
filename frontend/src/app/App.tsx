@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { DatasetSummary, QueryResponse, UploadState } from '../contracts/dataAssistant'
 import { DatasetSummary as DatasetSummaryPanel } from '../features/dataset/DatasetSummary'
 import { AnalysisResult } from '../features/query/AnalysisResult'
@@ -11,6 +11,7 @@ import { UploadDropzone } from '../features/upload/UploadDropzone'
 import { UploadSteps } from '../features/upload/UploadSteps'
 import { DataAssistantApiError } from '../services/http/dataAssistantApiError'
 import { dataAssistantGateway } from '../services/dataAssistantGateway'
+import { isCurrentRequest } from './requestGuard'
 import './app.css'
 
 interface HistoryItem { id: string; datasetId: string; question: string; result?: QueryResponse; error?: string }
@@ -29,6 +30,8 @@ function App() {
   const [querying, setQuerying] = useState(false)
   const [queryError, setQueryError] = useState<string>()
   const [history, setHistory] = useState<HistoryItem[]>([])
+  const queryRequestId = useRef(0)
+  const activeDatasetId = useRef<string | undefined>(undefined)
 
   const handleFile = (file: File) => {
     setUploadError(undefined)
@@ -44,12 +47,18 @@ function App() {
   }
 
   const handleStartUpload = async () => {
-    if (!selectedFile) return
+    if (!selectedFile || uploadState === 'uploading') return
     setUploadError(undefined)
     setUploadState('uploading')
     try {
       const summary = await dataAssistantGateway.uploadDataset(selectedFile)
+      queryRequestId.current += 1
+      activeDatasetId.current = summary.id
       setDataset(summary)
+      setHistory([])
+      setQuestion('')
+      setQueryError(undefined)
+      setQuerying(false)
       setUploadState('ready')
     } catch (error) {
       setUploadError(getUploadErrorMessage(error))
@@ -59,28 +68,28 @@ function App() {
 
   const resetUpload = () => {
     setSelectedFile(undefined)
-    setDataset(undefined)
     setUploadError(undefined)
     setUploadState('idle')
     setView('upload')
-    setHistory([])
-    setQuestion('')
-    setQueryError(undefined)
   }
 
   const runQuery = async (historyId: string, datasetId: string, value: string) => {
+    const requestId = queryRequestId.current + 1
+    queryRequestId.current = requestId
     setQuerying(true)
     setQueryError(undefined)
     try {
       const result = await dataAssistantGateway.queryDataset({ datasetId, question: value })
+      if (!isCurrentRequest(requestId, queryRequestId.current, datasetId, activeDatasetId.current)) return
       setHistory((current) => current.map((item) => item.id === historyId ? { ...item, result, error: undefined } : item))
       setQuestion('')
     } catch (error) {
+      if (!isCurrentRequest(requestId, queryRequestId.current, datasetId, activeDatasetId.current)) return
       const message = getQueryErrorMessage(error)
       setHistory((current) => current.map((item) => item.id === historyId ? { ...item, error: message } : item))
       setQueryError(message)
     } finally {
-      setQuerying(false)
+      if (requestId === queryRequestId.current) setQuerying(false)
     }
   }
 
@@ -89,6 +98,7 @@ function App() {
     if (!canSubmitQuery(activeDataset?.id, value, querying) || !activeDataset) return
     const trimmedQuestion = normalizeQuestion(value)
     const historyId = crypto.randomUUID()
+    activeDatasetId.current = activeDataset.id
     setQuestion(trimmedQuestion)
     setHistory((current) => [{ id: historyId, datasetId: activeDataset.id, question: trimmedQuestion }, ...current])
     void runQuery(historyId, activeDataset.id, trimmedQuestion)
@@ -103,7 +113,7 @@ function App() {
   if (view === 'workspace' && dataset) return <Workspace dataset={dataset} question={question} querying={querying} queryError={queryError} history={history} onQuestionChange={setQuestion} onSubmit={submitQuestion} onRetry={retryQuestion} onLoadAnother={resetUpload} />
 
   return <main className="app-shell upload-screen">
-    <header className="topbar"><Brand /></header>
+     <header className="topbar"><Brand />{dataset && <button className="text-button topbar__action" onClick={() => setView('workspace')}>voltar ao dataset ativo <span aria-hidden="true">↗</span></button>}</header>
     <section className="hero" aria-labelledby="page-title"><div className="hero__copy"><p className="eyebrow"><span className="eyebrow__line" /> workspace de dados</p><h1 id="page-title">Pergunte aos seus <em>dados.</em></h1><p className="hero__lead">Transforme arquivos CSV em respostas claras. Comece enviando um dataset para preparar seu espaço de análise.</p></div><div className="hero__signal" aria-hidden="true"><span /><span /><span /><span /><span /></div></section>
      <section className="workspace upload-workspace" aria-labelledby="upload-title"><div className="section-heading"><div><span className="step-label">01 / iniciar</span><h2 id="upload-title">Adicione um dataset</h2></div><p>Um CSV ou ZIP com seus dados<br className="desktop-only" /> é tudo que precisamos.</p></div><UploadSteps state={uploadState} />
        {uploadState === 'ready' && dataset ? <DatasetSummaryPanel dataset={dataset} onExplore={() => setView('workspace')} /> : <UploadDropzone state={uploadState} file={selectedFile} error={uploadError} onFile={handleFile} onStart={handleStartUpload} onRemove={resetUpload} onDragState={(active) => { if (!selectedFile) setUploadState(active ? 'drag-active' : 'idle') }} />}
@@ -113,12 +123,13 @@ function App() {
 }
 
 function getUploadErrorMessage(error: unknown) {
-  if (!(error instanceof DataAssistantApiError)) return error instanceof Error ? error.message : 'Não foi possível enviar este arquivo.'
+  if (!(error instanceof DataAssistantApiError)) return 'Não foi possível enviar este arquivo.'
   if (error.code === 'unsupported_file_type') return 'Envie um arquivo CSV ou ZIP.'
   if (error.code === 'upload_too_large') return 'O arquivo excede o limite permitido.'
   if (['invalid_zip', 'unsafe_zip_entry', 'no_csv_files_found', 'zip_limit_exceeded', 'dataset_load_failed'].includes(error.code)) return 'Não foi possível preparar os CSVs deste arquivo.'
   if (error.code === 'network_error') return 'Não foi possível conectar ao servidor. Tente novamente.'
-  return error.message
+  if (error.code === 'validation_error') return 'O arquivo não pôde ser validado.'
+  return 'Não foi possível preparar o dataset. Tente novamente.'
 }
 
 interface WorkspaceProps { dataset: DatasetSummary; question: string; querying: boolean; queryError?: string; history: HistoryItem[]; onQuestionChange: (value: string) => void; onSubmit: (question: string) => void; onRetry: (item: HistoryItem) => void; onLoadAnother: () => void }

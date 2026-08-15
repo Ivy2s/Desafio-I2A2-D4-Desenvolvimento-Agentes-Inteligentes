@@ -38,6 +38,7 @@ describe('HttpDataAssistantGateway', () => {
 
   it.each([
     [{ answer: 'Texto.', data: null }, { answer: 'Texto.', data: null }],
+    [{ answer: 'Nenhum registro.', data: { type: 'count', value: 0 } }, { data: { type: 'count', value: 0 } }],
     [{ answer: '565 registros.', data: { type: 'count', value: 565 } }, { data: { type: 'count', value: 565 } }],
     [{ answer: 'Tabela.', data: { type: 'table', columns: ['b', 'a'], rows: [{ a: 1, b: 2 }], truncated: true, returnedRows: 1 } }, { data: { type: 'table', columns: ['b', 'a'], rows: [{ b: 2, a: 1 }], truncated: true, returnedRows: 1 } }],
   ])('adapts query data', async (body, expected) => {

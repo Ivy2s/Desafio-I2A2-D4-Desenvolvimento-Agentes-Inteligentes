@@ -1,4 +1,4 @@
-export type UploadState = 'idle' | 'drag-active' | 'validating' | 'selected' | 'uploading' | 'processing' | 'ready' | 'invalid-file' | 'error'
+export type UploadState = 'idle' | 'drag-active' | 'selected' | 'uploading' | 'ready' | 'invalid-file' | 'error'
 
 export interface DatasetFile {
   name: string
