@@ -3,6 +3,7 @@ import { defineConfig, devices } from '@playwright/test'
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
+  workers: 1,
   retries: 0,
   timeout: 120000,
   reporter: [['list'], ['html', { open: 'never' }]],
@@ -19,7 +20,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'python3 -m uvicorn api.main:app --host 127.0.0.1 --port 18000',
+      command: '.venv-qa/bin/python -m uvicorn api.main:app --host 127.0.0.1 --port 18000',
       cwd: '..',
       env: { ...process.env, CORS_ORIGINS: 'http://127.0.0.1:15173' },
       url: 'http://127.0.0.1:18000/api/health',

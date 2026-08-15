@@ -63,11 +63,11 @@ test('consulta real usa o endpoint do agente quando a IA está configurada', asy
   await page.getByRole('button', { name: 'Explorar dados' }).click()
   await expect(page.getByRole('heading', { name: 'O que você quer descobrir?' })).toBeVisible({ timeout: 120000 })
   const queryRequest = page.waitForRequest((request) => request.url().includes('/api/datasets/') && request.url().endsWith('/query'))
-  await page.locator('#query-input').fill('Quantos registros existem?')
+  await page.locator('#query-input').fill('Quantos registros existem no dataset compras?')
   await page.locator('#query-input').press('Enter')
   await queryRequest
   await expect(page.getByText('análise concluída')).toHaveCount(1, { timeout: 120000 })
-  await expect(page.locator('.result-answer')).toContainText(/[34]/)
+  await expect(page.locator('.result-answer')).toContainText('4')
   await page.screenshot({ path: '../deliverables/evidence/03-query-real.png', fullPage: true })
 })
 

@@ -40,7 +40,7 @@ As respostas foram calculadas independentemente a partir da fixture e comparadas
 
 ## QA e limitações
 
-Backend: 49 testes aprovados. Frontend: 31 testes aprovados, lint e build aprovados. Os cenários Playwright seriais de upload, dicionário e quatro perguntas reais passaram; a execução completa desktop/mobile terminou `9 passed / 5 failed` por `429 RateLimit` externo do Groq. O Gemini configurado retornou `404 NOT_FOUND` para os modelos testados. Por isso o estado formal é **DELIVERY_BLOCKED**, embora os requisitos funcionais tenham evidência via Groq suportado.
+Backend: 49 testes aprovados em `.venv-qa`; `pip check` aprovado. Frontend: 31 testes aprovados, lint e build aprovados. A execução completa Playwright desktop/mobile terminou `14 passed`, usando Groq real e `workers: 1` para evitar concorrência de quota. O estado formal é **DELIVERY_CERTIFIED**. Gemini não foi utilizado nesta certificação, pois o provedor selecionado foi Groq.
 
 Limitações do MVP: registry em memória, datasets perdidos após restart, histórico local e ausência de autenticação/persistência.
 

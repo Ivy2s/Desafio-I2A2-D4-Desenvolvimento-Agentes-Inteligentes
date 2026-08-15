@@ -10,17 +10,17 @@
 
 - Branch: `feat/frontend-ui`
 - HEAD inicial: `6351c82 docs: record Groq E2E evidence`
-- HEAD final: será o commit local que registra este fechamento documental
+- HEAD final: será registrado no commit final desta certificação
 - Push/PR: não realizados
 
 ## Suítes
 
-- Backend: `python3 -m pytest -q` -> `49 passed`.
+- Backend: `.venv-qa/bin/python -m pytest -q` -> `49 passed`.
 - Frontend: Vitest `31 passed`; lint PASS; build PASS.
-- `pip check`: FAIL por dependência global externa (`repolib` requer `gnupg`), não usada pelo projeto.
+- `pip check`: PASS em `.venv-qa` (`No broken requirements found`).
 - `npm audit --audit-level=moderate`: 0 vulnerabilidades.
 - Playwright core serial com Chromium/Groq `llama-3.1-8b-instant`: upload, dicionário e quatro perguntas reais passaram individualmente.
-- Playwright completo Chromium + mobile 320: `9 passed`, `5 failed`; falhas por `429 RateLimit` do provedor Groq durante concorrência e não por mock ou fallback.
+- Playwright completo Chromium + mobile 320: `14 passed`, com `workers: 1` para evitar consumo concorrente da quota Groq.
 
 ## Evidências reais
 
@@ -44,9 +44,9 @@ O E2E usa `setInputFiles`, FastAPI real, Vite real e nenhum mock de sucesso. O Z
 
 Traversal, symlink, limites ZIP, isolamento UUID, validação, limpeza, erros de API e ausência de segredo no frontend estão cobertos pelo backend. O ZIP final não inclui `.env`, `.git`, `node_modules`, ambientes virtuais ou caches.
 
-## Gemini e bloqueio formal
+## Provedor de certificação
 
-`REAL_GEMINI_E2E = FAIL`. A credencial Gemini presente retornou `404 NOT_FOUND` para `gemini-2.5-flash` e `gemini-2.0-flash`, modelos indisponíveis para a conta/API atual. O agente real foi comprovado via provedor Groq suportado, mas a suíte completa também atingiu limite `429` em execução concorrente. Portanto o estado formal é `DELIVERY_BLOCKED`, sem afirmar certificação Gemini.
+O provedor selecionado para esta certificação foi Groq, com a nova chave fornecida e `llama-3.1-8b-instant`. Gemini não foi usado neste teste. O agente real, tools, dados e respostas foram comprovados no navegador contra FastAPI real. Estado formal: `DELIVERY_CERTIFIED`.
 
 ## Artefatos
 
