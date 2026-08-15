@@ -17,7 +17,7 @@ from tools.data_tools import DataQuery, describe_data, query_data
 
 def build_tools(data_manager: DataManager) -> list[StructuredTool]:
     query_tool = StructuredTool.from_function(
-        func=lambda query: query_data(query, data_manager),
+        func=lambda **kwargs: query_data(DataQuery.model_validate(kwargs), data_manager),
         name="query_data",
         description=(
             "Consulta dados carregados. Consulte describe_data antes, "

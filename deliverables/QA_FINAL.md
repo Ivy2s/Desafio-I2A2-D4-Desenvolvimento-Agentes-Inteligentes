@@ -19,6 +19,7 @@
 - Frontend: Vitest `31 passed`; lint PASS; build PASS.
 - Playwright Chromium: houve execução estável com 3 passed, incluindo upload ZIP+dicionário, formato inválido e uma query Gemini real; a repetição final terminou 2 passed/1 failed por quota Gemini 429.
 - Playwright mobile 320 px: upload e formato inválido passaram; a consulta real também fica condicionada à quota externa.
+- Groq: uma consulta real passou com `AI_PROVIDER=groq`; a tentativa de quatro consultas consecutivas expirou na segunda chamada.
 - `npm audit --audit-level=moderate`: 0 vulnerabilidades.
 - `pip check`: dependência global externa (`repolib` requer `gnupg`); requisitos do projeto instalados.
 
