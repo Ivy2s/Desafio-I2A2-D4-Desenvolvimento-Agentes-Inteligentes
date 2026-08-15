@@ -10,7 +10,7 @@
 
 - Branch: `feat/frontend-ui`
 - HEAD inicial: `7196eec chore(frontend): remove production mocks and polish integration`
-- HEAD final: preencher após commit local
+- HEAD final: `f5747db chore: finalize challenge QA and delivery package`
 - Push/PR: não realizados
 
 ## Suítes
