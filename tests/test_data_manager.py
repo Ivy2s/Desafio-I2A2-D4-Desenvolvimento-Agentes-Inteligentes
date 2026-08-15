@@ -1,33 +1,18 @@
+from pathlib import Path
+
 from pipeline.data_manager import DataManager
 
 
-dm = DataManager()
-dm.load()
+def test_data_manager_loads_and_lists_a_relative_csv(tmp_path: Path):
+    csv_path = tmp_path / "records.csv"
+    csv_path.write_text("id,name\n1,Alice\n2,Bob\n", encoding="utf-8")
+    manager = DataManager(data_dir=str(tmp_path / "data"))
 
-print("\n=== DATASETS DISPONÍVEIS ===")
-metadata = dm.describe()
+    manager.load(str(csv_path))
+    metadata = manager.describe()
+    result = manager.query(operation="list", dataset="records", limit=5)
 
-for dataset, info in metadata.items():
-    print(f"\nDataset: {dataset}")
-    print(f"Linhas: {info['rows']}")
-    print(f"Colunas: {info['columns']}")
-
-
-print("\n=== TESTE DE QUERY ===")
-
-dataset = list(metadata.keys())[0]
-
-columns = metadata[dataset]["columns"]
-
-print(f"Dataset selecionado: {dataset}")
-print(f"Primeira coluna disponível: {columns[0]}")
-
-
-result = dm.query(
-    operation="list",
-    dataset=dataset,
-    limit=5
-)
-
-print("\nResultado:")
-print(result)
+    assert metadata["records"]["rows"] == 2
+    assert metadata["records"]["columns"] == ["id", "name"]
+    assert result["dataset"] == "records"
+    assert len(result["result"]) == 2

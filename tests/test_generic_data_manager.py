@@ -1,33 +1,20 @@
+from pathlib import Path
+
 from pipeline.data_manager import DataManager
 
 
-dm = DataManager()
-dm.load()
+def test_data_manager_discovers_multiple_datasets_without_fixed_names(tmp_path: Path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    (data_dir / "first.csv").write_text("id\n1\n", encoding="utf-8")
+    (data_dir / "second.csv").write_text("label\nA\n", encoding="utf-8")
+    manager = DataManager(data_dir=str(data_dir))
 
-metadata = dm.describe()
+    metadata = manager.load()
 
-print("\n=== TESTE GENÉRICO ===")
-
-for dataset, info in metadata.items():
-
-    print(f"\nDataset: {dataset}")
-    print(f"Linhas: {info['rows']}")
-
-    columns = info["columns"]
-
-    # Teste 1: dataset possui schema
-    assert len(columns) > 0
-
-    # Teste 2: list funciona sem conhecer previamente as colunas
-    result = dm.query(
-        operation="list",
-        dataset=dataset,
-        limit=3
-    )
-
-    assert result["dataset"] == dataset
-    assert len(result["result"]) <= 3
-
-    print("✓ list OK")
-
-print("\n=== TODOS OS TESTES PASSARAM ===")
+    assert set(metadata) == {"first", "second"}
+    for dataset, info in manager.describe().items():
+        assert info["columns"]
+        result = manager.query(operation="list", dataset=dataset, limit=3)
+        assert result["dataset"] == dataset
+        assert len(result["result"]) <= 3

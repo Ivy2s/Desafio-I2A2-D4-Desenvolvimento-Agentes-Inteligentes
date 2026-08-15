@@ -1,7 +1,10 @@
 venv/
+.venv/
+.venv-test/
 .env
 __pycache__/
-*.pycdata/raw/
+*.pyc
+.pytest_cache/
 data/raw/
 .runtime/
 frontend/node_modules/

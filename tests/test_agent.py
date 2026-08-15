@@ -1,25 +1,9 @@
-from pathlib import Path
+import pytest
 
-from services.query_service import QueryService
-from services.session_registry import SessionRegistry
-
-
-def main():
-    registry = SessionRegistry(".runtime/manual-agent")
-    session = registry.create()
-    try:
-        zip_path = Path(__file__).resolve().parents[1] / "data" / "202401_NFs.zip"
-        session.manager.load(str(zip_path))
-        registry.register(session)
-        result = QueryService(registry).query(
-            session.dataset_id,
-            "Quais são os 5 fornecedores com maior valor total?",
-        )
-        print(result.answer)
-        print(result.data)
-    finally:
-        registry.discard(session)
+from agents.csv_agent import create_agent
 
 
-if __name__ == "__main__":
-    main()
+def test_agent_factory_requires_key_only_when_called(monkeypatch):
+    monkeypatch.setattr("agents.csv_agent.GOOGLE_API_KEY", None)
+    with pytest.raises(RuntimeError, match="GOOGLE_API_KEY"):
+        create_agent()
