@@ -14,9 +14,9 @@ camelCase; os datasets são efêmeros e ficam em registry de memória.
 `aiConfigured` indica somente a presença da configuração do provedor; não é um
 teste de conectividade.
 
-O backend suporta os perfis `primary` e `alternative` por `GEMINI_PROFILE`.
-`primary` usa `GOOGLE_API_KEY`/`GEMINI_MODEL`; `alternative` usa
-`GOOGLE_API_KEY_ALT` (ou a chave primária) e `GEMINI_MODEL_ALT`.
+O backend suporta `AI_PROVIDER=gemini` (padrão) ou `AI_PROVIDER=groq`.
+Gemini usa `GOOGLE_API_KEY`/`GEMINI_MODEL`; Groq usa
+`GROQ_API_KEY`/`GROQ_MODEL`.
 
 ## Upload
 

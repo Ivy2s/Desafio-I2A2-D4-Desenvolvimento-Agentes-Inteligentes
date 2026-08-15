@@ -4,10 +4,10 @@ import os
 load_dotenv()
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-GOOGLE_API_KEY_ALT = os.getenv("GOOGLE_API_KEY_ALT")
-GEMINI_PROFILE = os.getenv("GEMINI_PROFILE", "primary").lower()
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+AI_PROVIDER = os.getenv("AI_PROVIDER", "gemini").lower()
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
-GEMINI_MODEL_ALT = os.getenv("GEMINI_MODEL_ALT", "gemini-3.5-flash")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
 
 def _env_int(name: str, default: int) -> int:
@@ -39,11 +39,10 @@ MAX_QUERY_RESULT_ROWS = _env_int("MAX_QUERY_RESULT_ROWS", 1000)
 
 
 def is_ai_configured() -> bool:
-    return bool(selected_gemini_credentials()[0])
+    return bool(GROQ_API_KEY if AI_PROVIDER == "groq" else GOOGLE_API_KEY)
 
 
-def selected_gemini_credentials() -> tuple[str | None, str]:
-    """Retorna a chave/modelo do perfil sem remover o perfil primário."""
-    if GEMINI_PROFILE == "alternative":
-        return GOOGLE_API_KEY_ALT or GOOGLE_API_KEY, GEMINI_MODEL_ALT
+def selected_ai_credentials() -> tuple[str | None, str]:
+    if AI_PROVIDER == "groq":
+        return GROQ_API_KEY, GROQ_MODEL
     return GOOGLE_API_KEY, GEMINI_MODEL

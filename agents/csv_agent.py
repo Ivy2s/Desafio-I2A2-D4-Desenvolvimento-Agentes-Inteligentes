@@ -1,15 +1,16 @@
 from langchain_core.tools import StructuredTool
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 
 from pipeline.data_manager import DataManager
 from services.config import (
     AGENT_REQUEST_TIMEOUT_SECONDS,
     AGENT_RETRIES,
+    AI_PROVIDER,
     GEMINI_MODEL,
-    GEMINI_MODEL_ALT,
-    GEMINI_PROFILE,
     GOOGLE_API_KEY,
-    GOOGLE_API_KEY_ALT,
+    GROQ_API_KEY,
+    GROQ_MODEL,
 )
 from tools.data_tools import DataQuery, describe_data, query_data
 
@@ -40,24 +41,33 @@ def create_agent(
     tools: list[StructuredTool] | None = None,
 ):
     """Cria o modelo com ferramentas ligadas ao DataManager da sessão."""
-    google_api_key, gemini_model = _selected_credentials()
-    if not google_api_key:
-        raise RuntimeError("GOOGLE_API_KEY não configurada")
+    api_key, model = _selected_credentials()
+    if not api_key:
+        raise RuntimeError(f"Chave não configurada para o provedor {AI_PROVIDER}")
 
     manager = data_manager or DataManager()
     bound_tools = tools or build_tools(manager)
-    llm = ChatGoogleGenerativeAI(
-        model=gemini_model,
-        temperature=0,
-        google_api_key=google_api_key,
-        request_timeout=AGENT_REQUEST_TIMEOUT_SECONDS,
-        retries=AGENT_RETRIES,
-        thinking_budget=0,
-    )
+    if AI_PROVIDER == "groq":
+        llm = ChatGroq(
+            model=model,
+            temperature=0,
+            api_key=api_key,
+            timeout=AGENT_REQUEST_TIMEOUT_SECONDS,
+            max_retries=AGENT_RETRIES,
+        )
+    else:
+        llm = ChatGoogleGenerativeAI(
+            model=model,
+            temperature=0,
+            google_api_key=api_key,
+            request_timeout=AGENT_REQUEST_TIMEOUT_SECONDS,
+            retries=AGENT_RETRIES,
+            thinking_budget=0,
+        )
     return llm.bind_tools(bound_tools)
 
 
 def _selected_credentials() -> tuple[str | None, str]:
-    if GEMINI_PROFILE == "alternative":
-        return GOOGLE_API_KEY_ALT or GOOGLE_API_KEY, GEMINI_MODEL_ALT
+    if AI_PROVIDER == "groq":
+        return GROQ_API_KEY, GROQ_MODEL
     return GOOGLE_API_KEY, GEMINI_MODEL

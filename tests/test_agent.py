@@ -3,19 +3,22 @@ import pytest
 from agents.csv_agent import create_agent
 
 
-def test_agent_factory_requires_key_only_when_called(monkeypatch):
+def test_agent_factory_requires_primary_key_only_when_called(monkeypatch):
     monkeypatch.setattr("agents.csv_agent.GOOGLE_API_KEY", None)
-    with pytest.raises(RuntimeError, match="GOOGLE_API_KEY"):
+    monkeypatch.setattr("agents.csv_agent.AI_PROVIDER", "gemini")
+    with pytest.raises(RuntimeError, match="gemini"):
         create_agent()
 
 
-def test_agent_factory_selects_alternative_model_and_key(monkeypatch):
+def test_agent_factory_supports_groq_fallback(monkeypatch):
     import agents.csv_agent as csv_agent
+    import services.config as config
 
-    monkeypatch.setattr(csv_agent, "GEMINI_PROFILE", "alternative", raising=False)
-    monkeypatch.setattr(csv_agent, "GOOGLE_API_KEY_ALT", "alternative-key", raising=False)
-    monkeypatch.setattr(csv_agent, "GEMINI_MODEL_ALT", "gemini-3.5-flash", raising=False)
+    monkeypatch.setattr(csv_agent, "AI_PROVIDER", "groq")
+    monkeypatch.setattr(config, "GROQ_API_KEY", "groq-test-key")
+    monkeypatch.setattr(config, "GROQ_MODEL", "llama-3.3-70b-versatile")
+    monkeypatch.setattr(csv_agent, "GROQ_API_KEY", "groq-test-key")
 
-    key, model = csv_agent._selected_credentials()
+    agent = create_agent()
 
-    assert (key, model) == ("alternative-key", "gemini-3.5-flash")
+    assert agent is not None

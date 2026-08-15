@@ -24,16 +24,16 @@ npm ci
 npm run dev
 ```
 
-Use `VITE_API_BASE_URL` para apontar o frontend para outro host de API. O
-perfil antigo permanece como padrão. Para usar a alternativa:
+Use `VITE_API_BASE_URL` para apontar o frontend para outro host de API. Gemini
+permanece como provedor padrão. Para usar o fallback Groq:
 
 ```bash
-export GEMINI_PROFILE=alternative
-export GOOGLE_API_KEY_ALT='chave-do-projeto-alternativo' # opcional; usa a primária se omitida
-export GEMINI_MODEL_ALT=gemini-3.5-flash # opcional; este é o padrão alternativo
+export AI_PROVIDER=groq
+export GROQ_API_KEY='chave-groq'
+export GROQ_MODEL=llama-3.3-70b-versatile # opcional
 ```
 
-O perfil primário continua usando `GOOGLE_API_KEY` e `GEMINI_MODEL` (por padrão
+O perfil primário usa `GOOGLE_API_KEY` e `GEMINI_MODEL` (por padrão
 `gemini-2.5-flash`). Nunca coloque qualquer chave no frontend ou no Git.
 
 ## API e testes
