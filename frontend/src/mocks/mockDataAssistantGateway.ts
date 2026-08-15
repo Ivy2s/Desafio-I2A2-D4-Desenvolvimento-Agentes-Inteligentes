@@ -68,4 +68,9 @@ export class MockDataAssistantGateway implements DataAssistantGateway {
       metadata: { executionTimeMs: 1100, agent: 'mock fixture' },
     }
   }
+
+  async getDataset(datasetId: string): Promise<DatasetSummary> {
+    await wait(100)
+    return { id: datasetId, name: 'dataset demonstrativo', csvFiles: ['NFe_Cabecalho.csv', 'NFe_Itens.csv', 'Dicionario.csv'], records: 128430, columns: 24, status: 'ready' }
+  }
 }
