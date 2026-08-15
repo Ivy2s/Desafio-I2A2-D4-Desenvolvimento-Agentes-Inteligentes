@@ -228,6 +228,7 @@ def test_zip_member_limit_cleans_session(tmp_path, monkeypatch):
 def test_missing_dataset_returns_404(tmp_path):
     response = client_for(tmp_path).get("/api/datasets/00000000-0000-0000-0000-000000000000")
     assert response.status_code == 404
+    assert response.json()["error"]["code"] == "dataset_not_found"
 
 
 def test_query_without_ai_key_returns_controlled_error(tmp_path, monkeypatch):

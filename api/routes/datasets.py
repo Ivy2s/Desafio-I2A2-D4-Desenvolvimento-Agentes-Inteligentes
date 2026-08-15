@@ -61,7 +61,10 @@ def get_dataset(request: Request, dataset_id: UUID) -> DatasetDetailResponse:
         session = request.app.state.registry.get(dataset_id)
         return request.app.state.dataset_service.metadata(session)
     except DatasetNotFoundError as error:
-        raise HTTPException(status_code=404, detail="Dataset não encontrado") from error
+        raise HTTPException(
+            status_code=404,
+            detail={"code": error.code, "message": "Dataset não encontrado"},
+        ) from error
     except Exception as error:
         raise HTTPException(status_code=500, detail="Erro interno ao ler o dataset") from error
 
@@ -87,7 +90,10 @@ def query_dataset(
         result = request.app.state.query_service.query(dataset_id, payload.question.strip())
         return QueryResponse(answer=result.answer, data=result.data)
     except DatasetNotFoundError as error:
-        raise HTTPException(status_code=404, detail="Dataset não encontrado") from error
+        raise HTTPException(
+            status_code=404,
+            detail={"code": error.code, "message": "Dataset não encontrado"},
+        ) from error
     except AIUnavailableError as error:
         raise HTTPException(status_code=503, detail={"code": error.code, "message": str(error)}) from error
     except AgentExecutionError as error:
