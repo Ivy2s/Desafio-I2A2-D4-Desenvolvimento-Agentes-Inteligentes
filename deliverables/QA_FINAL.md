@@ -10,7 +10,7 @@
 
 - Branch: `feat/frontend-ui`
 - HEAD inicial: `6351c82 docs: record Groq E2E evidence`
-- HEAD final: será registrado após o commit local
+- HEAD final: `1cf9c32 chore: finalize challenge QA and delivery package`
 - Push/PR: não realizados
 
 ## Suítes
