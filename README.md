@@ -188,7 +188,7 @@ Se `AI_PROVIDER` for removido do `.env`, o sistema seleciona automaticamente o p
 
 O startup interrompe a execução com uma mensagem clara quando o provedor é inválido ou sua chave está ausente.
 
-## Como usar
+## ⚙️ Como usar
 
 1. Abra a interface no navegador.
 2. Arraste um `.csv` ou `.zip` para a área de upload, ou selecione o arquivo.
