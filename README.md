@@ -38,19 +38,19 @@ Nota: Listar outras tecnologias e frameworks utilizados
             ┌─────────────────────┐
             │      PIPELINE       │
             │                     │
-            │ ZIP → CSV → dados   │
-            │ validação           │
-            │ dicionário          │
+            │ ZIP → CSV → Dados   │
+            │ Validação           │
+            │ Dicionário          │
             └──────────┬──────────┘
                        ↓
             ┌─────────────────────┐
             │      AGENTE         │
             │                     │
             │ Pergunta natural    │
-            │       ↓             │
-            │ interpreta intenção │
-            │       ↓             │
-            │ chama TOOL          │
+            │          ↓          │
+            │ Interpreta intenção │
+            │          ↓          │
+            │ Chama TOOL          │
             └──────────┬──────────┘
                        ↓
             ┌─────────────────────┐
@@ -59,8 +59,8 @@ Nota: Listar outras tecnologias e frameworks utilizados
                        ↓
             ┌─────────────────────┐
             │   INTERFACE B       │
-            │ resposta            │
-            │ texto/tabela/gráfico│
+            │ Resposta            │
+            │ Texto/Tabela/Gráfico│
             └─────────────────────┘
 
 UPLOAD ↓ qualquer ZIP compatível ↓ pipeline descobre datasets ↓ DataDictionary descreve os datasets ↓ agente recebe essa informação ↓ agente decide qual dataset/coluna utilizar
