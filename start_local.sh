@@ -106,4 +106,4 @@ printf 'Frontend: http://%s:%s\n' "${FRONTEND_HOST}" "${FRONTEND_PORT}"
 printf 'Backend:  %s\n' "${API_URL}"
 printf '%s\n' 'Pressione Ctrl+C para encerrar frontend e backend.'
 
-wait -n "${API_PID}" "${FRONTEND_PID}"
+wait "${API_PID}" "${FRONTEND_PID}"

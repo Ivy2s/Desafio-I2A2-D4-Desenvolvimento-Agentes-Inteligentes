@@ -49,7 +49,7 @@ PROVIDER_COOLDOWN_SECONDS = _env_int("PROVIDER_COOLDOWN_SECONDS", 20)
 def is_ai_configured() -> bool:
     if AI_PROVIDER == "groq":
         return bool(GROQ_API_KEY)
-    return bool(GOOGLE_API_KEY or GROQ_API_KEY)
+    return bool(GOOGLE_API_KEY)
 
 
 def ai_configuration_error() -> str | None:

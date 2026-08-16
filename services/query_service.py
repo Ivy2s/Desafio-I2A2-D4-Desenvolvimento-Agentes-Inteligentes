@@ -259,6 +259,7 @@ class QueryService:
                             request_finished_at=self._timestamp(),
                             headers=headers,
                         )
+                    logger.error("ERRO REAL DO PROVIDER: %r", error)
                     provider_error = self._provider_error(error, provider)
                     if provider_error:
                         self._record_provider_failure(provider, provider_error)
