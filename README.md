@@ -136,7 +136,7 @@ não estiver disponível:
 sudo apt install python3-venv
 ```
 
-## Início rápido
+## ⚙️ Início rápido
 
 1. Clone o repositório e entre no diretório do projeto.
 2. Crie o arquivo local de configuração:
@@ -164,7 +164,7 @@ Depois da inicialização, acesse:
 
 Use `Ctrl+C` no terminal para encerrar frontend e backend.
 
-## Configuração da IA
+## ⚙️ Configuração da IA
 
 As chaves pertencem somente ao backend. Nunca use variáveis `VITE_*` para armazenar credenciais.
 
@@ -299,7 +299,7 @@ VITE_API_PROXY_TARGET=http://127.0.0.1:18005 npm run dev -- --host 127.0.0.1 --p
 | `GET` | `/api/datasets/{dataset_id}` | Metadados da sessão |
 | `POST` | `/api/datasets/{dataset_id}/query` | Pergunta em linguagem natural |
 
-## Testes
+## 🔎 Testes
 
 Backend:
 
@@ -356,7 +356,7 @@ bash start_local.sh
 
 Confirme a extensão, o tamanho, o separador, o encoding, a existência de pelo menos uma linha e a ausência de colunas ou nomes de datasets duplicados.
 
-## Arquitetura e segurança
+## 🔐 Arquitetura e segurança
 
 - `frontend/`: React, interface de upload e workspace de consulta;
 - `api/`: rotas e contratos FastAPI;
