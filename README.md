@@ -11,7 +11,7 @@
 </table>
 
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
-![LangChain]([https://www.langchain.com](https://www.langchain.com/))
+![LangChain](https://www.langchain.com/)
 
 ## 📖 Visão Geral
 
