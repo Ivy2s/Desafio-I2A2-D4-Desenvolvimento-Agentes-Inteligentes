@@ -10,16 +10,15 @@
 | REQ-06 | Processamento automático | upload síncrono prepara sessão | E2E transição após upload | PASS |
 | REQ-07 | Consulta disponível | workspace e composer após CTA de exploração | E2E Interface B | PASS |
 | REQ-08 | Linguagem natural | textarea encaminha pergunta ao endpoint | E2E query real | PASS |
-| REQ-09 | Agente inteligente | Groq/Gemini com tools vinculadas | `agents/csv_agent.py`, E2E Groq real | PASS |
+| REQ-09 | Agente inteligente | Groq/Gemini com tools vinculadas | `agents/csv_agent.py`, E2E real canônico | PASS |
 | REQ-10 | Interpretação e consulta estruturada | `describe_data`/`query_data` escolhidas pelo modelo | testes do agente; uma chamada real | PASS |
 | REQ-11 | Dados carregados e isolamento | registry UUID e DataManager por sessão | `test_uploads_are_isolated` | PASS |
-| REQ-12 | Resposta correta | operações Pandas e contrato tipado | quatro E2E reais seriais; resultados 4, Alfa=3500 e fornecedores=3 | PASS |
+| REQ-12 | Resposta correta | operações Pandas e contrato tipado | suítes `two-csv-real.spec.ts` e `real-data-assistant.spec.ts` | PASS |
 | REQ-13 | Resposta em texto | campo `answer` na UI | E2E query real | PASS |
 | REQ-14 | Resposta em tabela | `TableData` e `DataTable` | E2E agregação e listagem reais; screenshots 04 e 05 | PASS |
 | REQ-15 | Resposta em gráfico | gráfico SVG derivado de tabela | E2E agregação real com SVG acessível; screenshot 04 | PASS |
 | REQ-16 | Framework do curso | LangChain + Groq/Gemini | requirements/imports/relatório | PASS |
 
-Os requisitos funcionais foram comprovados com Groq, provedor suportado pelo
-projeto e selecionado explicitamente nesta certificação. A suíte completa foi
-serializada para evitar consumo concorrente da quota. Não são usados mocks nas
-evidências de sucesso.
+As suítes E2E reais iniciam FastAPI e Vite, fazem upload pelo navegador e não
+usam mocks de resposta. Os artefatos de cada execução são temporários e ficam
+em `frontend/test-results/`.

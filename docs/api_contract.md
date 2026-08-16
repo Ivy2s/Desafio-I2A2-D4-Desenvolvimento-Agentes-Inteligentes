@@ -16,7 +16,7 @@ teste de conectividade.
 
 O backend suporta `AI_PROVIDER=gemini` (padrão) ou `AI_PROVIDER=groq`.
 Gemini usa `GOOGLE_API_KEY`/`GEMINI_MODEL`; Groq usa
-`GROQ_API_KEY`/`GROQ_MODEL`.
+`GROQ_API_KEY`/`GROQ_MODEL` (padrão `openai/gpt-oss-20b`).
 
 ## Upload
 
@@ -126,6 +126,10 @@ Todos os erros dos endpoints usam:
 | `dataset_load_failed` | 400 | Falha de leitura/validação |
 | `internal_error` | 500 | Falha interna não detalhada |
 | `ai_provider_unavailable` | 503 | IA não configurada |
+| `provider_rate_limit` | 429 | Limite temporário; `details.provider_rate_limit_source` distingue `groq`, `local_budget`, `circuit_breaker` e `cooldown` |
+| `provider_quota_exhausted` | 429 | Cota externa do provedor esgotada |
+| `provider_unavailable` | 503 | Provedor temporariamente indisponível |
+| `query_invalid` | 422 | Plano não pôde ser executado com os dados disponíveis |
 | `unknown_tool` | 502 | Agente solicitou tool não registrada |
 | `tool_execution_failed` | 502 | Tool não conseguiu executar |
 | `agent_timeout` | 502 | Provedor excedeu timeout |
@@ -138,3 +142,5 @@ Todos os erros dos endpoints usam:
 - Processamento é síncrono.
 - Não há autenticação ou persistência.
 - O backend fornece dados; a decisão de visualização pertence ao frontend.
+- Cooldown de provedor é mantido somente em memória do processo; após restart,
+  o estado é perdido.
