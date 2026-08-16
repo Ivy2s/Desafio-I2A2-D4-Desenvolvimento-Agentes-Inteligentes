@@ -69,7 +69,8 @@ UPLOAD ↓ qualquer ZIP compatível ↓ pipeline descobre datasets ↓ DataDicti
 
 ## ⚙️ Descrição dos Agentes do projeto
 
-Nota: descrever os agentes desenvolvidos (item obrigatório)
+Data Assistent é uma aplicação web para carregar arquivos CSV ou ZIP e consultar dados em linguagem natural. O frontend React envia os arquivos ao backend FastAPI; um agente do LangChain com Gemini ou Groq interpreta a pergunta, e o Pandas executa a consulta de forma determinística.
+
 
 ## ⚙️ Fluxo de Funcionamento da Aplicação
 
@@ -117,17 +118,7 @@ Para testar localmente:
 4. Faça o upload do ZIP pela Interface A.
 
 
-## 📄 Documento do Projeto
-
-Nota: Referenciar o report final
-
 ---
-# Data Assistent
-
-Aplicação web para carregar arquivos CSV ou ZIP e consultar os dados em
-linguagem natural. O frontend React envia os arquivos ao backend FastAPI, um
-agente LangChain com Gemini ou Groq interpreta a pergunta e o Pandas executa a
-consulta de forma determinística.
 
 ## Requisitos
 
@@ -193,12 +184,9 @@ GROQ_API_KEY=sua_chave
 GROQ_MODEL=openai/gpt-oss-20b
 ```
 
-Se `AI_PROVIDER` for removido do `.env`, o sistema seleciona automaticamente o
-provedor cuja chave estiver preenchida. Quando as duas chaves existem, Gemini é
-o primário e Groq pode ser usado como fallback em falhas compatíveis.
+Se `AI_PROVIDER` for removido do `.env`, o sistema seleciona automaticamente o provedor cuja chave estiver preenchida. Quando as duas chaves existem, Gemini é o primário e Groq pode ser usado como fallback em falhas compatíveis.
 
-O startup interrompe a execução com uma mensagem clara quando o provedor é
-inválido ou sua chave está ausente.
+O startup interrompe a execução com uma mensagem clara quando o provedor é inválido ou sua chave está ausente.
 
 ## Como usar
 
@@ -208,8 +196,7 @@ inválido ou sua chave está ausente.
 4. Após o processamento, clique em **Explorar dados**.
 5. Digite uma pergunta no chat e pressione `Enter`.
 
-Cada upload cria uma sessão isolada por UUID. Os dados permanecem somente em
-memória e em `.runtime` durante a execução e são perdidos após o restart.
+Cada upload cria uma sessão isolada por UUID. Os dados permanecem somente em memória e em `.runtime` durante a execução e são perdidos após o restart.
 
 ## Arquivos aceitos
 
@@ -221,15 +208,11 @@ memória e em `.runtime` durante a execução e são perdidos após o restart.
 - arquivo não vazio e com nomes de colunas únicos;
 - limite padrão de upload de 500 MB.
 
-Os nomes das colunas são normalizados para minúsculas, sem acentos e com
-espaços convertidos em `_`. Por exemplo, `VALOR NOTA FISCAL` torna-se
-`valor_nota_fiscal`.
+Os nomes das colunas são normalizados para minúsculas, sem acentos e com espaços convertidos em `_`. Por exemplo, `VALOR NOTA FISCAL` torna-se `valor_nota_fiscal`.
 
 ### ZIP
 
-O ZIP pode conter um ou mais CSVs, inclusive em subdiretórios. Ele deve conter
-pelo menos um CSV de dados. Arquivos com o mesmo nome-base não são permitidos,
-mesmo quando estão em pastas diferentes.
+O ZIP pode conter um ou mais CSVs, inclusive em subdiretórios. Ele deve conter pelo menos um CSV de dados. Arquivos com o mesmo nome-base não são permitidos, mesmo quando estão em pastas diferentes.
 
 O backend rejeita ZIPs corrompidos, caminhos absolutos, path traversal,
 symlinks, entradas duplicadas e arquivos que excedam os limites de segurança.
@@ -388,3 +371,6 @@ teste são ignorados pelo Git. Não faça commit de chaves ou credenciais.
 Consulte também `docs/arquitetura.md`, `docs/api_contract.md` e
 `docs/challenge_compliance_matrix.md`.
 
+## 📄 Documento do Projeto
+
+Nota: Referenciar o report final
