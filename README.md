@@ -12,27 +12,26 @@
 
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 
-### 📖 Visão Geral
+## 📖 Visão Geral
 
 Este é um projeto de **agentes inteligentes** capazes de responderem perguntas em linguagem natural a respeito de um conjunto de dados armazenados em arquivos CSV.
 
   
-### 🎯 Objetivo
+## 🎯 Objetivo
 
 Demonstrar como a **inteligência agêntica** pode ser utilizada para transformar dados estruturados em informações de inteligência competitiva. Por meio de **agentes inteligentes** que aplicam conceitos de LLMs, ferramentas (tools), orquestração e automação, é possível que a solução interprete as perguntas do usuário e produza respostas úteis a partir de dados carregados de uma base de conhecimento.
 
 ---
-### 💻 Framework
+## 💻 Framework
 
 Construir texto
 
-## 📁 Estrutura do Repositório
 
 ## 🛠️ Arquitetura
 
 
 
-### ⚙️ Fluxo de Funcionamento da Aplicação
+## ⚙️ Fluxo de Funcionamento da Aplicação
 
 
 <img width="2694" height="3655" alt="image" src="https://github.com/user-attachments/assets/4f706773-00a4-453f-b9f5-5c217ee4df8c" />
@@ -58,7 +57,7 @@ O repositório está organizado nas seguintes pastas:
 | `README.md` | Este arquivo. |
 
 
-### 📈 Dados de teste
+## 📈 Dados de teste
 
 Os datasets fornecidos pelo curso Insurminds da I2A2 não são versionados neste repositório devido ao tamanho dos arquivos.
 
@@ -70,6 +69,6 @@ Para testar localmente:
 4. Faça o upload do ZIP pela Interface A.
 
 
-### 📄 Documento do Projeto
+## 📄 Documento do Projeto
 
 Referenciar o report final
