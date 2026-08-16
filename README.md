@@ -14,7 +14,7 @@
 
 ## 📖 Visão Geral
 
-Este é um projeto de **agentes inteligentes** capazes de responderem perguntas em linguagem natural a respeito de um conjunto de dados armazenados em arquivos CSV.
+Este é um projeto de **agentes inteligentes** capazes de responderem perguntas em linguagem natural usando um conjunto de dados armazenados em arquivos CSV.
 
   
 ## 🎯 Objetivo
@@ -24,7 +24,8 @@ Demonstrar como a **inteligência agêntica** pode ser utilizada para transforma
 ---
 ## 💻 Framework
 
-Construir texto
+O projeto foi desenvolvido em **Python**. 
+Nota: Listar outras tecnologias e frameworks utilizados
 
 
 ## 🛠️ Arquitetura
@@ -105,4 +106,4 @@ Para testar localmente:
 
 ## 📄 Documento do Projeto
 
-Referenciar o report final
+Nota: Referenciar o report final
