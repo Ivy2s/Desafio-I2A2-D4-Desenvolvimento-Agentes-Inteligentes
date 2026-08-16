@@ -29,6 +29,39 @@ Construir texto
 
 ## 🛠️ Arquitetura
 
+            ┌─────────────────────┐
+            │   INTERFACE A       │
+            │ Upload de ZIP       │
+            └──────────┬──────────┘
+                       ↓
+            ┌─────────────────────┐
+            │      PIPELINE       │
+            │                     │
+            │ ZIP → CSV → dados   │
+            │ validação           │
+            │ dicionário          │
+            └──────────┬──────────┘
+                       ↓
+            ┌─────────────────────┐
+            │      AGENTE         │
+            │                     │
+            │ Pergunta natural    │
+            │       ↓             │
+            │ interpreta intenção │
+            │       ↓             │
+            │ chama TOOL          │
+            └──────────┬──────────┘
+                       ↓
+            ┌─────────────────────┐
+            │ CONSULTA AOS DADOS  │
+            └──────────┬──────────┘
+                       ↓
+            ┌─────────────────────┐
+            │   INTERFACE B       │
+            │ resposta            │
+            │ texto/tabela/gráfico│
+            └─────────────────────┘
+
 
 
 ## ⚙️ Fluxo de Funcionamento da Aplicação
