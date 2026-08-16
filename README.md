@@ -94,16 +94,18 @@ O repositório está organizado nas seguintes pastas:
 
 | Diretório | Conteúdo |
 | :--- | :--- |
-| `Agente-csv/` | Contém trabalho do projeto. |
-| `Agentes/` | Prompt do agente. |
+| `Agentes/` | Prompts e agentes LangChain Gemini/Groq. |
+| `API/` | Rotas e contratos FastAPI. |
 | `Data/` | Conjunto de dados brutos e/ou processados utilizados no projeto. |
 | `Docs/` | Dicionário de dados e documentação da arquitetura de trabalho do projeto. |
+| `Frontend/` | React, interface de upload e workspace de consulta. |
 | `Imagens/` | Imagens usadas no projeto. |
-| `Pipeline/` | Carregamento e gerenciamento dos CSVs de trabalho do projeto. |
-| `Services/` | Contém o trabalho do projeto. |
+| `Pipeline/` | Extração segura, leitura, validação e consultas Pandas |
+| `Scripts/` | Conjunto de dados brutos e/ou processados utilizados no projeto. |
+| `Services/` | Sessões, consultas, providers e tratamento de erros. |
 | `Tests/` | Testes de validação do funcionamento. |
-| `Tools/` | Consulta aos dados. |
-| `README.md` | Este arquivo. |
+| `Tools/` | Schemas e tools estruturadas. |
+| `README.md` | Arquivo com objetivos e instruções do projeto. |
 
 
 ## 📈 Dados de teste
@@ -165,8 +167,7 @@ Use `Ctrl+C` no terminal para encerrar frontend e backend.
 
 ## Configuração da IA
 
-As chaves pertencem somente ao backend. Nunca use variáveis `VITE_*` para
-armazenar credenciais.
+As chaves pertencem somente ao backend. Nunca use variáveis `VITE_*` para armazenar credenciais.
 
 ### Gemini
 
