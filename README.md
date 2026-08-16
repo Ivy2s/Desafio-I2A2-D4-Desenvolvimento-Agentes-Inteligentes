@@ -69,7 +69,7 @@ UPLOAD ↓ qualquer ZIP compatível ↓ pipeline descobre datasets ↓ DataDicti
 
 ## ⚙️ Descrição dos Agentes do projeto
 
-Data Assistent é uma aplicação web para carregar arquivos CSV ou ZIP e consultar dados em linguagem natural. O frontend React envia os arquivos ao backend FastAPI; um agente do LangChain com Gemini ou Groq interpreta a pergunta, e o Pandas executa a consulta de forma determinística.
+**Data Assistent** é uma aplicação web para carregar arquivos CSV ou ZIP e consultar dados em linguagem natural. O frontend React envia os arquivos ao backend FastAPI; um agente do LangChain com Gemini ou Groq interpreta a pergunta, e o Pandas executa a consulta de forma determinística.
 
 
 ## ⚙️ Fluxo de Funcionamento da Aplicação
