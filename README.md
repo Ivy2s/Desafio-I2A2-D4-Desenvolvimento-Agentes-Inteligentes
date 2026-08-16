@@ -101,7 +101,7 @@ O repositório está organizado nas seguintes pastas:
 | `Frontend/` | React, interface de upload e workspace de consulta. |
 | `Imagens/` | Imagens usadas no projeto. |
 | `Pipeline/` | Extração segura, leitura, validação e consultas Pandas |
-| `Scripts/` | Conjunto de dados brutos e/ou processados utilizados no projeto. |
+| `Scripts/` | Query. |
 | `Services/` | Sessões, consultas, providers e tratamento de erros. |
 | `Tests/` | Testes de validação do funcionamento. |
 | `Tools/` | Schemas e tools estruturadas. |
