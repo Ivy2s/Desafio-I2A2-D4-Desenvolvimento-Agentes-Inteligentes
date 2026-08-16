@@ -6,13 +6,14 @@ import { QueryComposer } from '../features/query/QueryComposer'
 import { QueryErrorResult } from '../features/query/QueryErrorResult'
 import { canSubmitQuery, normalizeQuestion } from '../features/query/queryRules'
 import { getQueryCooldownSeconds, getQueryErrorMessage } from '../features/query/queryErrorMessage'
-import { SuggestedQuestions } from '../features/query/SuggestedQuestions'
+
 import { UploadDropzone } from '../features/upload/UploadDropzone'
 import { UploadSteps } from '../features/upload/UploadSteps'
 import { DataAssistantApiError } from '../services/http/dataAssistantApiError'
 import { dataAssistantGateway } from '../services/dataAssistantGateway'
 import { isCurrentRequest } from './requestGuard'
 import './app.css'
+import { SuggestedQuestions } from '../features/query/SuggestedQuestions'
 
 interface HistoryItem { id: string; datasetId: string; question: string; result?: QueryResponse; error?: string; errorCode?: string }
 
