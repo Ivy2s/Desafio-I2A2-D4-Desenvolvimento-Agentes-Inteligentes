@@ -11,7 +11,8 @@
 </table>
 
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
-![Endpoint Badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fwww.streamlinehq.com%2Ficons%2Fdownload%2Flangchain--31088)
+https://img.shields.io/badge/https%3A%2F%2Fwww.streamlinehq.com%2Ficons%2Fdownload%2Flangchain--31088
+
 
 
 
