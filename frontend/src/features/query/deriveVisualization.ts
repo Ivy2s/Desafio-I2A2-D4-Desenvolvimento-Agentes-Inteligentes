@@ -17,7 +17,7 @@ const isNumericColumn = (table: TableData, column: string) => {
 const isTemporalKey = (key: string) => /(^|_)(data|date|mes|mês|month|ano|year)($|_)/i.test(key)
 
 export function deriveVisualization(table: TableData): ChartModel | null {
-  if (table.rows.length === 0 || table.rows.length > MAX_CHART_CATEGORIES) return null
+  if (table.rows.length < 2 || table.rows.length > MAX_CHART_CATEGORIES) return null
 
   const numericColumns = table.columns.filter((column) => isNumericColumn(table, column))
   if (numericColumns.length !== 1) return null

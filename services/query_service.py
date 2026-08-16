@@ -900,8 +900,41 @@ class QueryService:
     def _answer_from_result(result: dict[str, Any]) -> str:
         if result.get("operation") == "count":
             return f"A consulta encontrou {int(result.get('result', 0))} registros."
-        returned = int(result.get("returned_rows", len(result.get("result", []))))
+
+        rows = result.get("result", [])
+        returned = int(result.get("returned_rows", len(rows)))
+
+        if result.get("operation") == "aggregate" and rows:
+            summary = QueryService._summarize_rows(rows)
+            if summary:
+                return summary
+
         return f"A consulta retornou {returned} resultado(s) na tabela."
+
+    @staticmethod
+    def _summarize_rows(rows: list[dict[str, Any]], max_rows: int = 5) -> str | None:
+        """Monta uma frase legível a partir de agregações (poucas colunas).
+        Nunca atua sobre linhas brutas de 'list' (que têm muitas colunas)."""
+        if not rows or any(len(row) > 4 for row in rows):
+            return None
+
+        def format_row(row: dict[str, Any]) -> str:
+            return ", ".join(
+                f"{key}: {QueryService._format_value(value)}" for key, value in row.items()
+            )
+
+        if len(rows) == 1:
+            return f"Resultado: {format_row(rows[0])}."
+
+        items = "; ".join(format_row(row) for row in rows[:max_rows])
+        suffix = "" if len(rows) <= max_rows else f" (mostrando os {max_rows} primeiros)"
+        return f"Resultados: {items}{suffix}."
+
+    @staticmethod
+    def _format_value(value: Any) -> str:
+        if isinstance(value, float):
+            return f"{value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+        return str(value)
 
     @staticmethod
     def _log_model_call(provider: str, response: Any, started_at: float, attempt: int, query_id: str | None = None) -> None:
