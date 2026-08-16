@@ -74,8 +74,8 @@ Nota: descrever os agentes desenvolvidos (item obrigatório)
 
 <table border="0">
   <tr>
-    <td width="220" align="center" valign="middle">
-  <img src="imagens/Aplicação Decision Flow-2026-08-16-020105.png"="200">
+    <td width="420" align="center" valign="middle">
+  <img src="imagens/Aplicação Decision Flow-2026-08-16-020105.png"="400">
       </td>
     <td valign="middle">
        </td>
