@@ -26,7 +26,9 @@ Demonstrar como a **inteligência agêntica** pode ser utilizada para transforma
 
 Construir texto
 
-### 🛠️ Arquitetura
+## 📁 Estrutura do Repositório
+
+## 🛠️ Arquitetura
 
 
 
