@@ -10,11 +10,6 @@
   </tr>
 </table>
 
-![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
-![LangChan](<img alt="Static Badge" src="https://img.shields.io/badge/https%3A%2F%2Fwww.streamlinehq.com%2Ficons%2Fdownload%2Flangchain--31088">
-)
-
-
 
 
 
