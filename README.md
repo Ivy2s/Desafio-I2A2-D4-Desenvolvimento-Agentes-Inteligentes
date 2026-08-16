@@ -72,8 +72,7 @@ Nota: descrever os agentes desenvolvidos (item obrigatório)
 ## ⚙️ Fluxo de Funcionamento da Aplicação
 
 
-<img width="2694" height="3655" alt="image" src="https://github.com/user-attachments/assets/4f706773-00a4-453f-b9f5-5c217ee4df8c" />
-
+imagens/Aplicação Decision Flow-2026-08-16-020105.png
 
 ---
 
