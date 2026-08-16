@@ -72,6 +72,9 @@ Nota: descrever os agentes desenvolvidos (item obrigatório)
 
 ## ⚙️ Fluxo de Funcionamento da Aplicação
 
+<table border="0">
+  <tr>
+    <td width="220" align="center" valign="middle">
   <img src="imagens/Aplicação Decision Flow-2026-08-16-020105.png">
   
 
