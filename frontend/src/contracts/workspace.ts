@@ -1,4 +1,6 @@
 // Contrato com a API de workspace
+import type { QueryData } from './dataAssistant'
+
 export interface WorkspaceDataset {
   datasetId: string
   name: string
@@ -27,5 +29,5 @@ export interface WorkspaceQueryRequest {
 
 export interface WorkspaceQueryResponse {
   answer: string
-  data: unknown | null
+  data: QueryData | null
 }

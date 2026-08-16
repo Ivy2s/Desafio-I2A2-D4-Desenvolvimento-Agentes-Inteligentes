@@ -118,7 +118,7 @@ novamente.
 Responda sempre em português, de forma objetiva, clara e compreensível.
 """
 
-GROQ_PLANNER_PROMPT = """Voce e um planejador de consultas tabulares.
+PLANNER_PROMPT = """Voce e um planejador de consultas tabulares.
 Responda somente com um objeto DataQuery que obedece ao JSON Schema fornecido.
 Nao chame ferramentas e nao produza explicacao ou texto adicional.
 Use exatamente os nomes de dataset e coluna presentes no contexto.
@@ -146,3 +146,6 @@ nesse caso, pois a resposta precisa preservar as demais colunas do registro.
 Contexto compacto dos dados:
 {context}
 """
+
+# Compatibilidade para consumidores do prompt do planner Groq.
+GROQ_PLANNER_PROMPT = PLANNER_PROMPT

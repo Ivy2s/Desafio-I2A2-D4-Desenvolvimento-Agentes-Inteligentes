@@ -78,7 +78,7 @@ def test_query_service_runs_tool_loop_and_returns_table(monkeypatch, tmp_path):
         "returnedRows": 1,
     }
     assert fake_tool.calls == [{"operation": "list", "dataset": "dataset"}]
-    assert fake_agent.calls[0][0].content.strip().startswith("Você é um agente inteligente")
+    assert fake_agent.calls[0][0].content.strip().startswith("Voce e um planejador")
 
 
 def test_query_service_accepts_direct_model_response(monkeypatch, tmp_path):
@@ -113,7 +113,7 @@ def test_query_service_mentions_all_session_datasets_in_context(monkeypatch, tmp
 
     assert "vendas" in messages[0].content.lower()
     assert "estoque" in messages[0].content.lower()
-    assert "todos os datasets carregados nesta sessão" in messages[0].content.lower()
+    assert '"vendas"' in messages[0].content.lower()
 
 
 def test_query_service_runs_describe_then_query(monkeypatch, tmp_path):
@@ -440,7 +440,9 @@ def test_agent_factory_configures_timeout_and_retries(monkeypatch):
         def __init__(self, **kwargs):
             captured.update(kwargs)
 
-        def bind_tools(self, tools):
+        def with_structured_output(self, schema, **kwargs):
+            captured["schema"] = schema
+            captured["structured_output"] = kwargs
             return self
 
     monkeypatch.setattr(csv_agent, "GOOGLE_API_KEY", "test-key")
@@ -450,6 +452,13 @@ def test_agent_factory_configures_timeout_and_retries(monkeypatch):
 
     assert captured["request_timeout"] > 0
     assert captured["retries"] == 0
+    assert captured["max_tokens"] == 512
+    assert captured["thinking_budget"] == 0
+    assert captured["schema"].__name__ == "DataQuery"
+    assert captured["structured_output"] == {
+        "method": "json_schema",
+        "include_raw": True,
+    }
 
 
 def test_query_service_enforces_iteration_limit(monkeypatch, tmp_path):

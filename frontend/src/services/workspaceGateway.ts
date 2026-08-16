@@ -8,6 +8,8 @@ interface WorkspaceGateway {
   queryWorkspace(workspaceId: string, request: WorkspaceQueryRequest): Promise<WorkspaceQueryResponse>
 }
 
+type WorkspaceQueryError = Error & { code?: string }
+
 class HttpWorkspaceGateway implements WorkspaceGateway {
   async createWorkspace(name: string = ''): Promise<WorkspaceData> {
     const response = await fetch('/api/workspaces', {
@@ -59,10 +61,10 @@ class HttpWorkspaceGateway implements WorkspaceGateway {
       body: JSON.stringify(request),
     })
     if (!response.ok) {
-      const errorData = await response.json()
+      const errorData: { error?: { message?: string; code?: string } } = await response.json()
       const error = new Error(
         errorData?.error?.message || `Query failed: ${response.statusText}`,
-      ) as any
+      ) as WorkspaceQueryError
       error.code = errorData?.error?.code
       throw error
     }

@@ -7,9 +7,10 @@ from langchain_groq import ChatGroq
 from pipeline.data_manager import DataManager
 from services.config import (
     AGENT_REQUEST_TIMEOUT_SECONDS,
-    AGENT_RETRIES,
     AI_PROVIDER,
     GEMINI_MODEL,
+    GEMINI_MAX_OUTPUT_TOKENS,
+    GEMINI_MAX_RETRIES,
     GOOGLE_API_KEY,
     GROQ_API_KEY,
     GROQ_MAX_RETRIES,
@@ -20,7 +21,7 @@ from services.config import (
 # Alias local mantido para fixtures e integracoes que inspecionam a fabrica.
 GROQ_AGENT_RETRIES = GROQ_MAX_RETRIES
 from services.exceptions import ProviderNotConfiguredError
-from tools.data_tools import DataQuery, describe_data, query_data
+from tools.data_tools import DataQuery, query_data
 
 
 def build_tools(data_manager: DataManager, provider: str | None = None) -> list[StructuredTool]:
@@ -30,16 +31,7 @@ def build_tools(data_manager: DataManager, provider: str | None = None) -> list[
         description="Executa um plano estruturado nos dados carregados. Use nomes exatos do contexto.",
         args_schema=DataQuery,
     )
-    describe_tool = StructuredTool.from_function(
-        func=lambda: _compact_description(describe_data(data_manager)),
-        name="describe_data",
-        description=(
-            "Retorna datasets, número de registros, colunas, tipos e descrições. "
-            "Use antes de query_data."
-        ),
-    )
-    # Groq recebe o schema no prompt e nao precisa de uma rodada de descoberta.
-    return [query_tool] if (provider or AI_PROVIDER).lower() == "groq" else [describe_tool, query_tool]
+    return [query_tool]
 
 
 def _compact_description(description: dict) -> dict:
@@ -70,7 +62,6 @@ def create_agent(
         )
 
     manager = data_manager or DataManager()
-    bound_tools = tools or build_tools(manager, provider=selected_provider)
     # Retry orchestration is centralized in QueryService to honor provider cooldowns.
     retries = GROQ_AGENT_RETRIES if selected_provider == "groq" else 0
     if selected_provider == "groq":
@@ -98,13 +89,17 @@ def create_agent(
         llm = ChatGoogleGenerativeAI(
             model=model,
             temperature=0,
-            max_tokens=512,
+            max_tokens=GEMINI_MAX_OUTPUT_TOKENS,
             google_api_key=api_key,
             request_timeout=AGENT_REQUEST_TIMEOUT_SECONDS,
-            retries=AGENT_RETRIES,
+            retries=GEMINI_MAX_RETRIES,
             thinking_budget=0,
         )
-    return llm.bind_tools(bound_tools)
+        return llm.with_structured_output(
+            DataQuery,
+            method="json_schema",
+            include_raw=True,
+        )
 
 
 def _strict_data_query_schema() -> dict:

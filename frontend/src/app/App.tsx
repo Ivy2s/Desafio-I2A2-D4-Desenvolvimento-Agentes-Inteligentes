@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { WorkspaceData } from '../contracts/workspace'
 import { DatasetManager } from '../features/upload/DatasetManager'
 import { WorkspaceQuery } from '../features/workspace/WorkspaceQuery'
@@ -6,6 +6,19 @@ import { workspaceGateway } from '../services/workspaceGateway'
 import './app.css'
 
 type View = 'workspace-select' | 'dataset-manager' | 'query'
+
+function Brand() {
+  return (
+    <a className="brand" href="/" aria-label="Data Assistent início">
+      <span className="brand__mark" aria-hidden="true">
+        <i />
+        <i />
+        <i />
+      </span>
+      <span>Data Assistent</span>
+    </a>
+  )
+}
 
 function App() {
   const [view, setView] = useState<View>('workspace-select')
@@ -41,21 +54,8 @@ function App() {
     }
   }
 
-  function Brand() {
-    return (
-      <a className="brand" href="/" aria-label="Data Assistent início">
-        <span className="brand__mark" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-        </span>
-        <span>Data Assistent</span>
-      </a>
-    )
-  }
-
   if (view === 'dataset-manager' && workspace) {
-    return <DatasetManager workspace={workspace} onLoadAnother={() => setView('workspace-select')} onQueryReady={handleQueryReady} />
+    return <DatasetManager workspace={workspace} onQueryReady={handleQueryReady} />
   }
 
   if (view === 'query' && workspace) {

@@ -63,7 +63,8 @@ export function WorkspaceQuery({ workspace, onBack }: WorkspaceQueryProps) {
       setQueryError(message)
       
       // Check for rate limit
-      if ((error as any)?.code?.includes('rate_limit')) {
+      const code = error instanceof Error && 'code' in error ? error.code : undefined
+      if (typeof code === 'string' && code.includes('rate_limit')) {
         setCooldownRemaining(60)
       }
     } finally {
@@ -209,7 +210,7 @@ export function WorkspaceQuery({ workspace, onBack }: WorkspaceQueryProps) {
                       id: item.id,
                       question: item.question,
                       answer: item.result.answer,
-                      data: (item.result.data as any) ?? null,
+                      data: item.result.data ?? null,
                     }
                     return <AnalysisResult key={item.id} result={normalized} />
                   })()
