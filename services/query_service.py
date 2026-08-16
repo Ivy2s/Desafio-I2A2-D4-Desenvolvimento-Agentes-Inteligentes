@@ -76,6 +76,45 @@ class QueryService:
         if not is_ai_configured():
             raise AIUnavailableError("O provedor de IA não está configurado")
 
+        return self._execute_query(session.manager, question, dataset_id)
+
+    def query_workspace(self, dataset_ids: list[UUID], question: str) -> QueryResult:
+        """Executa uma query sobre múltiplos datasets agregados."""
+        if not is_ai_configured():
+            raise AIUnavailableError("O provedor de IA não está configurado")
+
+        from pipeline.data_manager import DataManager
+        import tempfile
+        from pathlib import Path
+
+        # Cria um DataManager agregado com dados de todos os datasets
+        with tempfile.TemporaryDirectory() as temp_dir:
+            aggregated_manager = DataManager(data_dir=str(temp_dir))
+            aggregated_manager.datasets = {}
+            aggregated_manager.dictionary = {}
+            aggregated_manager.provided_descriptions = {}
+
+            # Carrega dados de todos os datasets
+            for dataset_id in dataset_ids:
+                try:
+                    session = self.registry.get(dataset_id)
+                    # Merge datasets
+                    aggregated_manager.datasets.update(session.manager.datasets)
+                    aggregated_manager.dictionary.update(session.manager.dictionary)
+                    aggregated_manager.provided_descriptions.update(
+                        session.manager.provided_descriptions
+                    )
+                except Exception as e:
+                    logger.warning(f"Falha ao carregar dataset {dataset_id}: {e}")
+
+            # Executa a query com o DataManager agregado
+            return self._execute_query(aggregated_manager, question, dataset_ids[0])
+
+    def _execute_query(self, manager: Any, question: str, dataset_id: UUID) -> QueryResult:
+        """Executa a query usando o DataManager fornecido."""
+        if not is_ai_configured():
+            raise AIUnavailableError("O provedor de IA não está configurado")
+
         query_id = f"q-{uuid4()}"
         logger.info("agent query started dataset_id=%s query_id=%s", dataset_id, query_id)
         try:
@@ -101,9 +140,9 @@ class QueryService:
                 "status": None,
             }
 
-            tools = self._build_tools(session.manager, provider)
+            tools = self._build_tools(manager, provider)
             tool_map = {tool.name: tool for tool in tools}
-            messages = self._messages(session.manager, question, provider)
+            messages = self._messages(manager, question, provider)
 
             if self.provider_health.remaining(provider, self._model(provider)):
                 self._log_local_block(query_id, provider)
@@ -123,12 +162,12 @@ class QueryService:
 
             try:
                 if fallback_used:
-                    tools = self._build_tools(session.manager, provider)
+                    tools = self._build_tools(manager, provider)
                     tool_map = {tool.name: tool for tool in tools}
-                    messages = self._messages(session.manager, question, provider)
-                    agent = create_agent(session.manager, tools=tools, provider=provider)
+                    messages = self._messages(manager, question, provider)
+                    agent = create_agent(manager, tools=tools, provider=provider)
                 else:
-                    agent = create_agent(session.manager, tools=tools)
+                    agent = create_agent(manager, tools=tools)
             except Exception as error:
                 provider_error = self._provider_error(error, provider)
                 if provider_error:
@@ -142,10 +181,10 @@ class QueryService:
                 provider = "groq"
                 telemetry["fallback_count"] += 1
                 telemetry["model"] = self._model(provider)
-                tools = self._build_tools(session.manager, provider)
+                tools = self._build_tools(manager, provider)
                 tool_map = {tool.name: tool for tool in tools}
-                messages = self._messages(session.manager, question, provider)
-                agent = create_agent(session.manager, tools=tools, provider=provider)
+                messages = self._messages(manager, question, provider)
+                agent = create_agent(manager, tools=tools, provider=provider)
                 fallback_used = True
             max_iterations = 1 if provider == "groq" else self.max_iterations
             for iteration in range(1, max_iterations + 1):
@@ -218,12 +257,12 @@ class QueryService:
                         provider = "groq"
                         telemetry["fallback_count"] += 1
                         telemetry["model"] = self._model(provider)
-                        tools = self._build_tools(session.manager, provider)
+                        tools = self._build_tools(manager, provider)
                         tool_map = {tool.name: tool for tool in tools}
                         agent = create_agent(
-                            session.manager, tools=tools, provider="groq"
+                            manager, tools=tools, provider="groq"
                         )
-                        messages = self._messages(session.manager, question, provider)
+                        messages = self._messages(manager, question, provider)
                         last_tool_result = None
                         self.provider_health.cooldown(
                             failed_provider,
@@ -275,12 +314,12 @@ class QueryService:
                         provider = "groq"
                         telemetry["fallback_count"] += 1
                         telemetry["model"] = self._model(provider)
-                        tools = self._build_tools(session.manager, provider)
+                        tools = self._build_tools(manager, provider)
                         tool_map = {tool.name: tool for tool in tools}
                         agent = create_agent(
-                            session.manager, tools=tools, provider="groq"
+                            manager, tools=tools, provider="groq"
                         )
-                        messages = self._messages(session.manager, question, provider)
+                        messages = self._messages(manager, question, provider)
                         last_tool_result = None
                         fallback_used = True
                         continue
@@ -289,7 +328,7 @@ class QueryService:
                     raise
                 plan = self._structured_plan(response)
                 if plan is not None:
-                    plan = self._normalize_plan(plan, question, session.manager)
+                    plan = self._normalize_plan(plan, question, manager)
                     tool = tool_map.get("query_data")
                     if tool is None:
                         raise UnknownToolError("Ferramenta desconhecida: query_data")
@@ -599,19 +638,30 @@ class QueryService:
 
     @staticmethod
     def _messages(manager: Any, question: str, provider: str):
+        try:
+            planner_context = manager.planner_context()
+        except (AttributeError, ValueError):
+            planner_context = {}
+
         if provider == "groq":
-            try:
-                planner_context = manager.planner_context()
-            except (AttributeError, ValueError):
-                # Fakes e sessoes ainda nao carregadas nao devem mascarar o
-                # erro original do provider durante testes/diagnosticos.
-                planner_context = {}
             context = json.dumps(planner_context, ensure_ascii=False, separators=(",", ":"))
             return [
                 SystemMessage(content=GROQ_PLANNER_PROMPT.format(context=context)),
                 HumanMessage(content=question),
             ]
-        return [SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=question)]
+
+        dataset_summary = ""
+        if planner_context:
+            dataset_names = ", ".join(sorted(planner_context.keys()))
+            dataset_summary = (
+                "Você deve considerar todos os datasets carregados nesta sessão: "
+                f"{dataset_names}. "
+                "Use os nomes exatos e as colunas disponíveis para responder, "
+                "sem inventar dados."
+            )
+
+        prompt = f"{SYSTEM_PROMPT}\n\n{dataset_summary}".strip()
+        return [SystemMessage(content=prompt), HumanMessage(content=question)]
 
     def _ensure_provider_available(
         self,

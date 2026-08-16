@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 
+import pandas as pd
 import pytest
 
 import services.query_service as query_service
@@ -93,6 +94,26 @@ def test_query_service_accepts_direct_model_response(monkeypatch, tmp_path):
 
     assert result.answer == "Posso analisar os datasets carregados."
     assert result.data is None
+
+
+def test_query_service_mentions_all_session_datasets_in_context(monkeypatch, tmp_path):
+    registry = SessionRegistry(str(tmp_path))
+    session = registry.create()
+    registry.register(session)
+    session.manager.datasets = {
+        "vendas": pd.DataFrame({"valor": [10, 20]}),
+        "estoque": pd.DataFrame({"quantidade": [5, 7]}),
+    }
+    session.manager.dictionary = {
+        "vendas": {"columns": ["valor"], "dtypes": {"valor": "int64"}, "descriptions": {}},
+        "estoque": {"columns": ["quantidade"], "dtypes": {"quantidade": "int64"}, "descriptions": {}},
+    }
+
+    messages = QueryService(registry)._messages(session.manager, "qual foi o total?", "gemini")
+
+    assert "vendas" in messages[0].content.lower()
+    assert "estoque" in messages[0].content.lower()
+    assert "todos os datasets carregados nesta sessão" in messages[0].content.lower()
 
 
 def test_query_service_runs_describe_then_query(monkeypatch, tmp_path):

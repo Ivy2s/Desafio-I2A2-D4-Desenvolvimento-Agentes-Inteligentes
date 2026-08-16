@@ -7,10 +7,12 @@ from fastapi.responses import JSONResponse
 
 from api.routes.datasets import router as datasets_router
 from api.routes.health import router as health_router
+from api.routes.workspace import router as workspace_router
 from api.schemas.error import ErrorResponse
 from services.dataset_service import DatasetService
 from services.query_service import QueryService
 from services.session_registry import SessionRegistry
+from services.workspace_registry import WorkspaceRegistry
 
 
 def create_app(runtime_root: str | None = None) -> FastAPI:
@@ -37,6 +39,7 @@ def create_app(runtime_root: str | None = None) -> FastAPI:
     app.state.registry = registry
     app.state.dataset_service = DatasetService(registry)
     app.state.query_service = QueryService(registry)
+    app.state.workspace_registry = WorkspaceRegistry()
 
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException):
@@ -80,6 +83,7 @@ def create_app(runtime_root: str | None = None) -> FastAPI:
 
     app.include_router(health_router)
     app.include_router(datasets_router)
+    app.include_router(workspace_router)
     return app
 
 
