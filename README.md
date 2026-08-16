@@ -121,7 +121,7 @@ Para testar localmente:
 
 ---
 
-## 📝Requisitos
+## 📝 Requisitos
 
 - Linux, macOS ou Windows com WSL/Git Bash;
 - Python 3.11 ou superior com suporte a `venv`;
@@ -198,7 +198,7 @@ O startup interrompe a execução com uma mensagem clara quando o provedor é in
 
 Cada upload cria uma sessão isolada por UUID. Os dados permanecem somente em memória e em `.runtime` durante a execução e são perdidos após o restart.
 
-## Arquivos aceitos
+## 🗂️ Arquivos aceitos
 
 ### CSV
 
@@ -230,7 +230,7 @@ compras.csv,fornecedor,Nome do fornecedor
 
 O dicionário ajuda o agente a relacionar os termos da pergunta às colunas. Ele não é contado como dataset.
 
-## Consultas suportadas
+## ✏️ Consultas suportadas
 
 O agente suporta:
 
@@ -266,7 +266,7 @@ O agente trabalha com os nomes e descrições encontrados no arquivo. Perguntas 
   máximo 20 categorias;
 - qualidade e disponibilidade também dependem do modelo e da quota do provedor.
 
-## Portas e execução separada
+## ⚙️ Portas e execução separada
 
 Para alterar as portas:
 
@@ -290,7 +290,7 @@ npm ci
 VITE_API_PROXY_TARGET=http://127.0.0.1:18005 npm run dev -- --host 127.0.0.1 --port 15179
 ```
 
-## API
+## 🛠️ API
 
 | Método | Rota | Finalidade |
 | --- | --- | --- |
