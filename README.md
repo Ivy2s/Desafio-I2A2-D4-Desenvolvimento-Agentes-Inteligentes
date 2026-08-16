@@ -22,7 +22,7 @@ Este é um projeto de **agentes inteligentes** capazes de responderem perguntas 
 Demonstrar como a **inteligência agêntica** pode ser utilizada para transformar dados estruturados em informações de inteligência competitiva. Por meio de **agentes inteligentes** que aplicam conceitos de LLMs, ferramentas (tools), orquestração e automação, é possível que a solução interprete as perguntas do usuário e produza respostas úteis a partir de dados carregados de uma base de conhecimento.
 
 ---
-## 💻 Framework
+## 💻 Frameworks e Ferramentas
 
 O projeto foi desenvolvido em **Python**. 
 Nota: Listar outras tecnologias e frameworks utilizados
@@ -65,6 +65,9 @@ Nota: Listar outras tecnologias e frameworks utilizados
 
 UPLOAD ↓ qualquer ZIP compatível ↓ pipeline descobre datasets ↓ DataDictionary descreve os datasets ↓ agente recebe essa informação ↓ agente decide qual dataset/coluna utilizar
 
+## ⚙️ Descrição dos Agentes do projeto
+
+Nota: descrever os agentes desenvolvidos (item obrigatório)
 
 ## ⚙️ Fluxo de Funcionamento da Aplicação
 
