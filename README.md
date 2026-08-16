@@ -27,7 +27,6 @@ Demonstrar como a **inteligência agêntica** pode ser utilizada para transforma
 
 O projeto foi desenvolvido em **Python**, **LangChain**, **Pydantic AI**.
 
-Nota: Listar outras tecnologias e frameworks utilizados
 
 
 ## 🛠️ Arquitetura
@@ -67,7 +66,7 @@ Nota: Listar outras tecnologias e frameworks utilizados
 
 UPLOAD ↓ qualquer ZIP compatível ↓ pipeline descobre datasets ↓ DataDictionary descreve os datasets ↓ agente recebe essa informação ↓ agente decide qual dataset/coluna utilizar
 
-## ⚙️ Descrição dos Agentes do projeto
+## 🤖 Descrição do Agente do projeto
 
 **Data Assistent** é uma aplicação web para carregar arquivos CSV ou ZIP e consultar dados em linguagem natural. O frontend React envia os arquivos ao backend FastAPI; um agente do LangChain com Gemini ou Groq interpreta a pergunta, e o Pandas executa a consulta de forma determinística.
 
