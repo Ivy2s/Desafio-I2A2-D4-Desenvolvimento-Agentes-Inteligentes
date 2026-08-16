@@ -121,7 +121,7 @@ Para testar localmente:
 
 ---
 
-## Requisitos
+## 📝Requisitos
 
 - Linux, macOS ou Windows com WSL/Git Bash;
 - Python 3.11 ou superior com suporte a `venv`;
