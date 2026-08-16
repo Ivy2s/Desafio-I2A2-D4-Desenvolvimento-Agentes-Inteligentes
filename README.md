@@ -2,7 +2,7 @@
 <table border="0">
   <tr>
     <td width="220" align="center" valign="middle">
-      <img src="images/icon.png" width="200">
+      <img src="tools/imagens/Agente Inteligente.avif" width="200">
     </td>
     <td valign="middle">
       <h1>Projeto Agente Inteligente com consulta de base de dados CSV</h1>
