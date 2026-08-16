@@ -12,7 +12,8 @@ from uuid import UUID
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 
 from agents.csv_agent import build_tools, create_agent
-from agents.prompts import PLANNER_PROMPT
+from agents.prompts import SYSTEM_PROMPT
+from agents.prompts import GROQ_PLANNER_PROMPT
 from services.config import (
     AGENT_REQUEST_TIMEOUT_SECONDS,
     AI_PROVIDER,
@@ -43,7 +44,6 @@ from services.exceptions import (
 )
 from services.session_registry import SessionRegistry
 from services.provider_health import ProviderHealth
-from services.gemini_errors import parse_gemini_error
 from tools.data_tools import DataQuery
 
 logger = logging.getLogger(__name__)
@@ -130,9 +130,6 @@ class QueryService:
                 "gemini_calls": 0,
                 "input_tokens_total": None,
                 "output_tokens_total": None,
-                "thought_tokens_total": None,
-                "cached_tokens_total": None,
-                "tool_use_tokens_total": None,
                 "total_tokens": None,
                 "fallback_count": 0,
                 "tools_called": [],
@@ -141,39 +138,26 @@ class QueryService:
                 "request_sent": False,
                 "block_source": None,
                 "status": None,
-                "calls": [],
             }
 
             tools = self._build_tools(manager, provider)
             tool_map = {tool.name: tool for tool in tools}
             messages = self._messages(manager, question, provider)
-            telemetry.update(self._context_metrics(manager, question, messages))
 
             if self.provider_health.remaining(provider, self._model(provider)):
                 self._log_local_block(query_id, provider)
-                state = self.provider_health.state(provider, self._model(provider))
-                source = "circuit_breaker" if state == ProviderHealth.OPEN else "cooldown"
-                telemetry["calls"].append(
-                    {
-                        "llm_call_id": None,
-                        "provider": provider,
-                        "model": self._model(provider),
-                        "iteration": 0,
-                        "request_sent": False,
-                        "status": (
-                            "LOCAL_CIRCUIT_OPEN"
-                            if state == ProviderHealth.OPEN
-                            else "LOCAL_COOLDOWN"
-                        ),
-                        "block_source": source,
-                    }
-                )
                 if provider != "groq" and self._fallback_available():
                     provider = "groq"
                     fallback_used = True
                     telemetry["fallback_count"] += 1
                     telemetry["model"] = self._model(provider)
                 else:
+                    source = (
+                        "circuit_breaker"
+                        if self.provider_health.state(provider, self._model(provider))
+                        == ProviderHealth.OPEN
+                        else "cooldown"
+                    )
                     raise self._cooldown_error(provider, source=source)
 
             try:
@@ -202,15 +186,12 @@ class QueryService:
                 messages = self._messages(manager, question, provider)
                 agent = create_agent(manager, tools=tools, provider=provider)
                 fallback_used = True
-            # Planners estruturados usam uma geração. A segunda iteração existe
-            # exclusivamente para um possível fallback Gemini -> Groq.
-            max_iterations = 1 if provider == "groq" else 2
+            max_iterations = 1 if provider == "groq" else self.max_iterations
             for iteration in range(1, max_iterations + 1):
                 logger.info("agent iteration=%d dataset_id=%s query_id=%s", iteration, dataset_id, query_id)
                 started_at: float | None = None
                 request_started_at: str | None = None
                 reservation_id: str | None = None
-                call_record: dict[str, Any] | None = None
                 try:
                     estimated_tokens = self._estimate_messages(messages) if provider == "groq" else 0
                     reservation_id = self._ensure_provider_available(
@@ -219,18 +200,6 @@ class QueryService:
                     started_at = time.monotonic()
                     request_started_at = self._timestamp()
                     telemetry["request_sent"] = True
-                    telemetry["provider_calls"] += 1
-                    telemetry[f"{provider}_calls"] += 1
-                    call_id = f"{query_id}:call:{telemetry['provider_calls']}"
-                    call_record = {
-                        "llm_call_id": call_id,
-                        "provider": provider,
-                        "model": self._model(provider),
-                        "iteration": iteration,
-                        "request_sent": True,
-                        "status": "request_sent",
-                    }
-                    telemetry["calls"].append(call_record)
                     self._log_decision(
                         query_id,
                         provider,
@@ -242,26 +211,15 @@ class QueryService:
                         response = agent.invoke(messages)
                     raw_response = self._raw_response(response)
                     self.provider_health.mark_success(provider, self._model(provider))
+                    telemetry["provider_calls"] += 1
+                    telemetry[f"{provider}_calls"] += 1
                     latency_ms = round((time.monotonic() - started_at) * 1000)
                     telemetry["latency_total_ms"] += latency_ms
                     usage = self._usage(raw_response)
-                    for key in (
-                        "input_tokens",
-                        "output_tokens",
-                        "thought_tokens",
-                        "cached_tokens",
-                        "tool_use_tokens",
-                        "total_tokens",
-                    ):
+                    for key in ("input_tokens", "output_tokens", "total_tokens"):
                         if usage.get(key) is not None:
                             total_key = f"{key}_total" if key != "total_tokens" else key
                             telemetry[total_key] = (telemetry[total_key] or 0) + usage[key]
-                    call_record.update(
-                        status="success",
-                        http_status=200,
-                        latency_ms=latency_ms,
-                        **usage,
-                    )
                     headers = self._provider_headers(raw_response)
                     self._update_budget(provider, raw_response)
                     self.provider_health.reconcile(
@@ -273,9 +231,7 @@ class QueryService:
                     reservation_id = None
                     self._apply_rate_telemetry(telemetry, headers)
                     telemetry["status"] = "success"
-                    self._log_model_call(
-                        provider, raw_response, started_at, iteration, query_id, call_id
-                    )
+                    self._log_model_call(provider, raw_response, started_at, iteration, query_id)
                     self._log_decision(
                         query_id,
                         provider,
@@ -288,23 +244,7 @@ class QueryService:
                 except TimeoutError as error:
                     self.provider_health.reconcile(reservation_id, release=True)
                     if started_at is not None:
-                        latency_ms = round((time.monotonic() - started_at) * 1000)
-                        telemetry["latency_total_ms"] += latency_ms
-                        if call_record is not None:
-                            call_record.update(status="timeout", latency_ms=latency_ms)
-                        telemetry["status"] = "timeout"
-                        self._log_model_failure(
-                            provider, started_at, iteration, "timeout", None, query_id,
-                            call_record.get("llm_call_id") if call_record else None,
-                        )
-                        self._log_decision(
-                            query_id,
-                            provider,
-                            "HTTP_OTHER_ERROR",
-                            provider_called=True,
-                            request_started_at=request_started_at,
-                            request_finished_at=self._timestamp(),
-                        )
+                        self._log_model_failure(provider, started_at, iteration, "timeout", None, query_id)
                     if (
                         provider != "groq"
                         and not fallback_used
@@ -341,18 +281,7 @@ class QueryService:
                         authoritative_requests="x-ratelimit-remaining-requests" in headers,
                     )
                     if started_at is not None:
-                        latency_ms = round((time.monotonic() - started_at) * 1000)
-                        telemetry["latency_total_ms"] += latency_ms
-                        if call_record is not None:
-                            call_record.update(
-                                status="error",
-                                status_code=self._status_code(error),
-                                latency_ms=latency_ms,
-                            )
-                        self._log_model_failure(
-                            provider, started_at, iteration, "error", error, query_id,
-                            call_record.get("llm_call_id") if call_record else None,
-                        )
+                        self._log_model_failure(provider, started_at, iteration, "error", error, query_id)
                         decision = (
                             "HTTP_429_PROVIDER"
                             if self._status_code(error) == 429
@@ -371,9 +300,6 @@ class QueryService:
                         )
                     logger.error("ERRO REAL DO PROVIDER: %r", error)
                     provider_error = self._provider_error(error, provider)
-                    if call_record is not None and provider_error is not None:
-                        call_record.update(provider_error.metadata)
-                        call_record["retry_after"] = provider_error.retry_after_seconds
                     if provider_error:
                         self._record_provider_failure(provider, provider_error)
                     if (
@@ -427,8 +353,11 @@ class QueryService:
                 )
                 if not tool_calls:
                     logger.info("agent query finished dataset_id=%s", dataset_id)
+                    answer_text = self._content_as_text(response.content)
+                    if isinstance(last_tool_result, dict):
+                        answer_text = self._with_source(answer_text, last_tool_result)
                     return QueryResult(
-                        answer=self._content_as_text(response.content),
+                        answer=answer_text,
                         data=self._result_as_data(last_tool_result),
                         telemetry=telemetry,
                     )
@@ -530,15 +459,7 @@ class QueryService:
             return None
         parsing_error = response.get("parsing_error")
         if parsing_error is not None:
-            raw = response.get("raw")
-            metadata = getattr(raw, "response_metadata", {}) or {}
-            finish_reason = metadata.get("finish_reason") if isinstance(metadata, dict) else None
-            message = (
-                "O provider truncou a DataQuery no limite de output tokens"
-                if finish_reason == "MAX_TOKENS"
-                else "O provider retornou um schema invalido"
-            )
-            raise QueryInvalidError(message) from parsing_error
+            raise QueryInvalidError("O provider retornou um schema invalido") from parsing_error
         parsed = response.get("parsed")
         if parsed is None:
             raise QueryInvalidError("O provider nao retornou uma DataQuery")
@@ -726,31 +647,25 @@ class QueryService:
         except (AttributeError, ValueError):
             planner_context = {}
 
-        context = json.dumps(planner_context, ensure_ascii=False, separators=(",", ":"))
-        return [
-            SystemMessage(content=PLANNER_PROMPT.format(context=context)),
-            HumanMessage(content=question),
-        ]
+        if provider == "groq":
+            context = json.dumps(planner_context, ensure_ascii=False, separators=(",", ":"))
+            return [
+                SystemMessage(content=GROQ_PLANNER_PROMPT.format(context=context)),
+                HumanMessage(content=question),
+            ]
 
-    @staticmethod
-    def _context_metrics(manager: Any, question: str, messages: list[Any]) -> dict[str, int]:
-        try:
-            context = json.dumps(
-                manager.planner_context(), ensure_ascii=False, separators=(",", ":")
+        dataset_summary = ""
+        if planner_context:
+            dataset_names = ", ".join(sorted(planner_context.keys()))
+            dataset_summary = (
+                "Você deve considerar todos os datasets carregados nesta sessão: "
+                f"{dataset_names}. "
+                "Use os nomes exatos e as colunas disponíveis para responder, "
+                "sem inventar dados."
             )
-        except (AttributeError, ValueError):
-            context = "{}"
-        system_prompt = str(getattr(messages[0], "content", "")) if messages else ""
-        schema = json.dumps(DataQuery.model_json_schema(), separators=(",", ":"))
-        return {
-            "system_prompt_size_chars": len(system_prompt) - len(context),
-            "schema_size_chars": len(schema),
-            "dataset_context_size_chars": len(context),
-            "question_size_chars": len(question),
-            "prompt_size_chars": sum(
-                len(str(getattr(message, "content", ""))) for message in messages
-            ),
-        }
+
+        prompt = f"{SYSTEM_PROMPT}\n\n{dataset_summary}".strip()
+        return [SystemMessage(content=prompt), HumanMessage(content=question)]
 
     def _ensure_provider_available(
         self,
@@ -859,8 +774,7 @@ class QueryService:
 
     @staticmethod
     def _provider_error(error: Exception, provider: str) -> ProviderError | None:
-        gemini_details = parse_gemini_error(error) if provider == "gemini" else {}
-        status_code = QueryService._status_code(error) or gemini_details.get("http_status")
+        status_code = QueryService._status_code(error)
         message = str(error).lower()
         headers = QueryService._provider_headers(error)
         retry_values = [
@@ -872,11 +786,6 @@ class QueryService:
         retry_after = max((value for value in retry_values if value is not None), default=None)
         if retry_after is None:
             retry_after = QueryService._retry_after_seconds({}, message)
-        structured_retry = QueryService._parse_duration(
-            str(gemini_details.get("retry_delay", ""))
-        )
-        if structured_retry is not None:
-            retry_after = max(retry_after or 0, structured_retry)
         wrapped_gemini_429 = (
             provider == "gemini"
             and re.search(r"\b429\b", message) is not None
@@ -890,26 +799,16 @@ class QueryService:
             "remaining_requests": QueryService._header_value(headers, "x-ratelimit-remaining-requests"),
             "request_reset": QueryService._header_value(headers, "x-ratelimit-reset-requests"),
             "limit_requests": QueryService._header_value(headers, "x-ratelimit-limit-requests"),
-            **gemini_details,
         }
         metadata = {key: value for key, value in metadata.items() if value is not None}
         if isinstance(error, ProviderError):
             return error
-        if QueryService._is_timeout(error):
+        if isinstance(error, TimeoutError):
             return ProviderTimeoutError("O provedor excedeu o tempo limite.", provider=provider)
         if isinstance(error, ProviderNotConfiguredError):
             return error
         if status_code == 429 or wrapped_gemini_429:
-            diagnosis = metadata.get("diagnosis")
-            if diagnosis in {"GEMINI_RATE_LIMIT_RPM", "GEMINI_RATE_LIMIT_TPM"}:
-                text = "Limite temporário do provedor atingido."
-                return ProviderRateLimitError(
-                    f"{text} Aguarde cerca de {retry_after}s." if retry_after else text,
-                    provider=provider,
-                    retry_after_seconds=retry_after,
-                    metadata=metadata,
-                )
-            if diagnosis or any(marker in message for marker in ("quota", "resource_exhausted", "insufficient_quota")):
+            if any(marker in message for marker in ("quota", "resource_exhausted", "insufficient_quota")):
                 text = "Cota do provedor de IA esgotada."
                 return ProviderQuotaExhaustedError(
                     f"{text} Aguarde cerca de {retry_after}s." if retry_after else text,
@@ -927,15 +826,7 @@ class QueryService:
         if status_code in {401, 403} or any(marker in message for marker in ("authentication", "unauthorized", "invalid api key")):
             return ProviderAuthError("Falha de autenticacao do provedor.", provider=provider, retry_after_seconds=retry_after, metadata=metadata)
         if status_code in {408, 409, 500, 502, 503, 504} or any(
-            marker in message for marker in (
-                "temporarily unavailable",
-                "service unavailable",
-                "not configured",
-                "authentication",
-                "network failure",
-                "connection error",
-                "connection reset",
-            )
+            marker in message for marker in ("temporarily unavailable", "service unavailable", "not configured", "authentication")
         ):
             return ProviderUnavailableError(
                 "O provedor de IA está temporariamente indisponível.",
@@ -947,15 +838,11 @@ class QueryService:
 
     @staticmethod
     def _provider_headers(error: Exception) -> dict[str, str]:
-        candidates = []
-        for current in QueryService._error_chain(error):
-            candidates.extend(
-                [
-                    getattr(current, "headers", None),
-                    getattr(getattr(current, "response", None), "headers", None),
-                    getattr(current, "response_metadata", None),
-                ]
-            )
+        candidates = [
+            getattr(error, "headers", None),
+            getattr(getattr(error, "response", None), "headers", None),
+            getattr(error, "response_metadata", None),
+        ]
         for candidate in candidates:
             if candidate:
                 if isinstance(candidate, dict) and isinstance(candidate.get("headers"), dict):
@@ -965,37 +852,10 @@ class QueryService:
 
     @staticmethod
     def _status_code(error: Exception) -> int | None:
-        for current in QueryService._error_chain(error):
-            values = (
-                getattr(current, "status_code", None),
-                getattr(getattr(current, "response", None), "status_code", None),
-                getattr(current, "code", None),
-            )
-            for value in values:
-                parsed = QueryService._integer(value)
-                if parsed is not None:
-                    return parsed
-        return None
-
-    @staticmethod
-    def _error_chain(error: BaseException):
-        seen = set()
-        current: BaseException | None = error
-        while current is not None and id(current) not in seen:
-            seen.add(id(current))
-            yield current
-            current = getattr(current, "__cause__", None) or getattr(
-                current, "__context__", None
-            )
-
-    @staticmethod
-    def _is_timeout(error: Exception) -> bool:
-        return any(
-            isinstance(current, TimeoutError)
-            or "timeout" in type(current).__name__.lower()
-            or "timed out" in str(current).lower()
-            for current in QueryService._error_chain(error)
-        )
+        value = getattr(error, "status_code", None)
+        if value is None:
+            value = getattr(getattr(error, "response", None), "status_code", None)
+        return QueryService._integer(value)
 
     @staticmethod
     def _header_value(headers: dict[str, str], name: str) -> str | None:
@@ -1042,7 +902,8 @@ class QueryService:
     @staticmethod
     def _answer_from_result(result: dict[str, Any]) -> str:
         if result.get("operation") == "count":
-            return f"A consulta encontrou {int(result.get('result', 0))} registros."
+            text = f"A consulta encontrou {int(result.get('result', 0))} registros."
+            return QueryService._with_source(text, result)
 
         rows = result.get("result", [])
         returned = int(result.get("returned_rows", len(rows)))
@@ -1050,9 +911,19 @@ class QueryService:
         if result.get("operation") == "aggregate" and rows:
             summary = QueryService._summarize_rows(rows)
             if summary:
-                return summary
+                return QueryService._with_source(summary, result)
 
-        return f"A consulta retornou {returned} resultado(s) na tabela."
+        text = f"A consulta retornou {returned} resultado(s) na tabela."
+        return QueryService._with_source(text, result)
+
+    @staticmethod
+    def _with_source(text: str, result: dict[str, Any]) -> str:
+        """Anexa qual dataset originou a resposta, para deixar explícito
+        quando há múltiplos CSVs carregados na mesma sessão/workspace."""
+        dataset = result.get("dataset")
+        if not dataset:
+            return text
+        return f"{text} (fonte: dataset '{dataset}')"
 
     @staticmethod
     def _summarize_rows(rows: list[dict[str, Any]], max_rows: int = 5) -> str | None:
@@ -1080,29 +951,20 @@ class QueryService:
         return str(value)
 
     @staticmethod
-    def _log_model_call(
-        provider: str,
-        response: Any,
-        started_at: float,
-        attempt: int,
-        query_id: str | None = None,
-        call_id: str | None = None,
-    ) -> None:
+    def _log_model_call(provider: str, response: Any, started_at: float, attempt: int, query_id: str | None = None) -> None:
         usage = QueryService._usage(response)
         logger.info(
-            "llm_call query_id=%s llm_call_id=%s provider=%s model=%s iteration=%d request_sent=true status=success latency_ms=%d input_tokens=%s output_tokens=%s thought_tokens=%s cached_tokens=%s tool_use_tokens=%s total_tokens=%s attempt=%d",
+            "llm_call query_id=%s llm_call_id=%s provider=%s model=%s iteration=%d tool=%s status=success latency_ms=%d input_tokens=%s output_tokens=%s total_tokens=%s attempt=%d",
             query_id,
-            call_id,
+            f"{query_id}:call:{attempt}" if query_id else None,
             provider,
             GROQ_MODEL if provider == "groq" else GEMINI_MODEL,
             attempt,
+            ",".join(call.get("name", "") for call in (getattr(response, "tool_calls", None) or [])),
             round((time.monotonic() - started_at) * 1000),
-            usage.get("input_tokens"),
-            usage.get("output_tokens"),
-            usage.get("thought_tokens"),
-            usage.get("cached_tokens"),
-            usage.get("tool_use_tokens"),
-            usage.get("total_tokens"),
+            usage.get("input_tokens", usage.get("prompt_tokens", usage.get("promptTokens"))),
+            usage.get("output_tokens", usage.get("completion_tokens", usage.get("completionTokens"))),
+            usage.get("total_tokens", usage.get("totalTokens")),
             attempt,
         )
 
@@ -1116,9 +978,6 @@ class QueryService:
         for target, aliases in {
             "input_tokens": ("input_tokens", "prompt_tokens", "promptTokens"),
             "output_tokens": ("output_tokens", "completion_tokens", "completionTokens"),
-            "thought_tokens": ("thought_tokens", "thoughts_token_count", "thoughtsTokenCount"),
-            "cached_tokens": ("cached_tokens", "cached_content_token_count", "cachedContentTokenCount"),
-            "tool_use_tokens": ("tool_use_tokens", "tool_use_prompt_token_count", "toolUsePromptTokenCount"),
             "total_tokens": ("total_tokens", "totalTokens"),
         }.items():
             for alias in aliases:
@@ -1126,16 +985,6 @@ class QueryService:
                 if value is not None:
                     result[target] = value
                     break
-        input_details = usage.get("input_token_details", {}) if isinstance(usage, dict) else {}
-        output_details = usage.get("output_token_details", {}) if isinstance(usage, dict) else {}
-        if "cached_tokens" not in result and isinstance(input_details, dict):
-            cached = QueryService._integer(input_details.get("cache_read"))
-            if cached is not None:
-                result["cached_tokens"] = cached
-        if "thought_tokens" not in result and isinstance(output_details, dict):
-            thoughts = QueryService._integer(output_details.get("reasoning"))
-            if thoughts is not None:
-                result["thought_tokens"] = thoughts
         return result
 
     def _update_budget(self, provider: str, response: Any) -> None:
@@ -1172,22 +1021,18 @@ class QueryService:
         status: str,
         error: Exception | None,
         query_id: str | None = None,
-        call_id: str | None = None,
     ) -> None:
         headers = QueryService._provider_headers(error) if error else {}
         logger.info(
-            "llm_call query_id=%s llm_call_id=%s provider=%s model=%s iteration=%d request_sent=true status=%s status_code=%s latency_ms=%d input_tokens=%s output_tokens=%s thought_tokens=%s cached_tokens=%s tool_use_tokens=%s total_tokens=%s remaining_tokens=%s token_reset=%s retry_after=%s attempt=%d",
+            "llm_call query_id=%s llm_call_id=%s provider=%s model=%s iteration=%d status=%s status_code=%s latency_ms=%d input_tokens=%s output_tokens=%s total_tokens=%s remaining_tokens=%s token_reset=%s retry_after=%s attempt=%d",
             query_id,
-            call_id,
+            f"{query_id}:call:{attempt}" if query_id else None,
             provider,
             GROQ_MODEL if provider == "groq" else GEMINI_MODEL,
             attempt,
             status,
             QueryService._status_code(error) if error else None,
             round((time.monotonic() - started_at) * 1000),
-            None,
-            None,
-            None,
             None,
             None,
             None,

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { DatasetSummary } from '../../contracts/dataAssistant'
 import type { WorkspaceData, WorkspaceDataset } from '../../contracts/workspace'
 import { UploadDropzone } from './UploadDropzone'
 import { UploadSteps } from './UploadSteps'
@@ -8,10 +9,11 @@ import '../../styles/dataset-manager.css'
 
 interface DatasetManagerProps {
   workspace: WorkspaceData
+  onLoadAnother: () => void
   onQueryReady: (workspace: WorkspaceData) => void
 }
 
-export function DatasetManager({ workspace, onQueryReady }: DatasetManagerProps) {
+export function DatasetManager({ workspace, onLoadAnother, onQueryReady }: DatasetManagerProps) {
   const [uploadState, setUploadState] = useState<'idle' | 'selected' | 'uploading' | 'error' | 'ready' | 'drag-active' | 'invalid-file'>('idle')
   const [selectedFile, setSelectedFile] = useState<File>()
   const [uploadError, setUploadError] = useState<string>()
