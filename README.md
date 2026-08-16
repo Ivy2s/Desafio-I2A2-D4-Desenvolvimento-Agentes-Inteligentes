@@ -30,7 +30,7 @@ Construir texto
 ## 🛠️ Arquitetura
 
             ┌─────────────────────┐
-            │   INTERFACE A       │
+            │   **INTERFACE A**   │
             │ Upload de ZIP       │
             └──────────┬──────────┘
                        ↓
@@ -62,6 +62,7 @@ Construir texto
             │ texto/tabela/gráfico│
             └─────────────────────┘
 
+UPLOAD ↓ qualquer ZIP compatível ↓ pipeline descobre datasets ↓ DataDictionary descreve os datasets ↓ agente recebe essa informação ↓ agente decide qual dataset/coluna utilizar
 
 
 ## ⚙️ Fluxo de Funcionamento da Aplicação
