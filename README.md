@@ -1,8 +1,8 @@
 
 <table border="0">
   <tr>
-    <td width="220" align="center" valign="middle">
-      <img src="imagens/Agente Inteligente.avif"="200">
+    <td width="420" align="center" valign="middle">
+      <img src="imagens/Agente Inteligente.avif"="400">
     </td>
     <td valign="middle">
       <h1>Projeto Agente Inteligente com consulta de base de dados CSV</h1>
