@@ -14,17 +14,21 @@
 
 ### 📖 Visão Geral
 
-Este é um projeto de agentes inteligentes capazes de responderem perguntas em linguagem natural a respeito de um conjunto de dados armazenados em arquivos CSV.
+Este é um projeto de **agentes inteligentes** capazes de responderem perguntas em linguagem natural a respeito de um conjunto de dados armazenados em arquivos CSV.
 
   
 ### 🎯 Objetivo
 
-Demonstrar como a inteligência agêntica pode ser utilizada para transformar dados estruturados em informações de inteligência competitiva. Por meio de agentes inteligentes que aplicam conceitos de LLMs, ferramentas (tools), orquestração e automação, é possível que a solução interprete as perguntas do usuário e produza respostas úteis a partir de dados carregados de uma base de conhecimento.
+Demonstrar como a **inteligência agêntica** pode ser utilizada para transformar dados estruturados em informações de inteligência competitiva. Por meio de **agentes inteligentes** que aplicam conceitos de LLMs, ferramentas (tools), orquestração e automação, é possível que a solução interprete as perguntas do usuário e produza respostas úteis a partir de dados carregados de uma base de conhecimento.
 
 ---
 ### 💻 Framework
 
 Construir texto
+
+### 🛠️ Arquitetura
+
+
 
 ### ⚙️ Fluxo de Funcionamento da Aplicação
 
