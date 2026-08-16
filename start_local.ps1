@@ -5,7 +5,7 @@ Set-Location $RootDir
 
 $APIHost = if ($env:API_HOST) { $env:API_HOST } else { "127.0.0.1" }
 $APIPort = if ($env:API_PORT) { $env:API_PORT } else { "18005" }
-$FrontendHost = if ($env:FRONTEND_HOST) { $env:FRONTEND_HOST } else { "127.0.0.1" }
+$FrontendHost = if ($env:FRONTEND_HOST) { $env:FRONTEND_HOST } else { "0.0.0.0" }
 $FrontendPort = if ($env:FRONTEND_PORT) { $env:FRONTEND_PORT } else { "15179" }
 $APIUrl = "http://${APIHost}:${APIPort}"
 
