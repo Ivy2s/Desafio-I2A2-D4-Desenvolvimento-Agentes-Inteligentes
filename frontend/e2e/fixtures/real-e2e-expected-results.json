@@ -1,0 +1,948 @@
+{
+  "csv": "data/202401_NFs_Itens.csv",
+  "rows": 565,
+  "columns": [
+    "CHAVE DE ACESSO",
+    "MODELO",
+    "SÉRIE",
+    "NÚMERO",
+    "NATUREZA DA OPERAÇÃO",
+    "DATA EMISSÃO",
+    "CPF/CNPJ Emitente",
+    "RAZÃO SOCIAL EMITENTE",
+    "INSCRIÇÃO ESTADUAL EMITENTE",
+    "UF EMITENTE",
+    "MUNICÍPIO EMITENTE",
+    "CNPJ DESTINATÁRIO",
+    "NOME DESTINATÁRIO",
+    "UF DESTINATÁRIO",
+    "INDICADOR IE DESTINATÁRIO",
+    "DESTINO DA OPERAÇÃO",
+    "CONSUMIDOR FINAL",
+    "PRESENÇA DO COMPRADOR",
+    "NÚMERO PRODUTO",
+    "DESCRIÇÃO DO PRODUTO/SERVIÇO",
+    "CÓDIGO NCM/SH",
+    "NCM/SH (TIPO DE PRODUTO)",
+    "CFOP",
+    "QUANTIDADE",
+    "UNIDADE",
+    "VALOR UNITÁRIO",
+    "VALOR TOTAL"
+  ],
+  "column_count": 27,
+  "sum_valor_total": 3371446.77,
+  "max_valor_total": 985050.0,
+  "min_valor_total": 2.18,
+  "average_valor_total": 5967.162424778761,
+  "top5_emitentes_sum": [
+    {
+      "group": "CHEMYUNION LTDA",
+      "value": 1292418.75
+    },
+    {
+      "group": "LABORATORIOS B.BRAUN S.A",
+      "value": 726081.6
+    },
+    {
+      "group": "XCMG BRASIL INDUSTRIA LTDA",
+      "value": 330000.0
+    },
+    {
+      "group": "EDITORA FTD S.A.",
+      "value": 292486.11
+    },
+    {
+      "group": "MALTACARE DISTRIBUIDORA LTDA",
+      "value": 122202.6
+    }
+  ],
+  "sum_by_uf_emitente": [
+    {
+      "group": "SP",
+      "value": 1733051.02
+    },
+    {
+      "group": "RJ",
+      "value": 828837.32
+    },
+    {
+      "group": "MG",
+      "value": 364802.36
+    },
+    {
+      "group": "MS",
+      "value": 148439.6
+    },
+    {
+      "group": "RS",
+      "value": 102725.27
+    },
+    {
+      "group": "CE",
+      "value": 58962.86
+    },
+    {
+      "group": "GO",
+      "value": 45051.48
+    },
+    {
+      "group": "DF",
+      "value": 34425.6
+    },
+    {
+      "group": "PR",
+      "value": 13877.78
+    },
+    {
+      "group": "PB",
+      "value": 12051.220000000001
+    },
+    {
+      "group": "SC",
+      "value": 9222.56
+    },
+    {
+      "group": "AM",
+      "value": 8985.05
+    },
+    {
+      "group": "MA",
+      "value": 4669.17
+    },
+    {
+      "group": "PA",
+      "value": 2286.39
+    },
+    {
+      "group": "MT",
+      "value": 1707.83
+    },
+    {
+      "group": "PE",
+      "value": 793.54
+    },
+    {
+      "group": "RO",
+      "value": 639.8199999999999
+    },
+    {
+      "group": "BA",
+      "value": 475.9
+    },
+    {
+      "group": "RN",
+      "value": 442.0
+    }
+  ],
+  "max_by_emitente": [
+    {
+      "group": "CHEMYUNION LTDA",
+      "value": 985050.0
+    },
+    {
+      "group": "LABORATORIOS B.BRAUN S.A",
+      "value": 726081.6
+    },
+    {
+      "group": "XCMG BRASIL INDUSTRIA LTDA",
+      "value": 330000.0
+    },
+    {
+      "group": "TMPRO COMERCIO DE ELETRO ELETRONICOS LTDA - MATRIZ",
+      "value": 82265.75
+    },
+    {
+      "group": "SIMCAUTO MECANICA E REPRESENTACOES LTDA",
+      "value": 55000.0
+    },
+    {
+      "group": "FARMACE - INDUSTRIA QUIMICO FARMACEUTICA CEARENSE LTDA",
+      "value": 51000.0
+    },
+    {
+      "group": "F C NICOLAU EQUIPAMENTOS PARA LABORATÓRIO LTDA.",
+      "value": 43499.99
+    },
+    {
+      "group": "MALTACARE DISTRIBUIDORA LTDA",
+      "value": 35000.0
+    },
+    {
+      "group": "PADTEC S/A",
+      "value": 29461.38
+    },
+    {
+      "group": "AURAMEDI FARMACEUTICA LTDA",
+      "value": 26881.2
+    },
+    {
+      "group": "HPL CONSTRUCAO, SEGURANCA E SERVICOS EIRELI",
+      "value": 20200.0
+    },
+    {
+      "group": "EDITORA FTD S.A.",
+      "value": 18833.36
+    },
+    {
+      "group": "DENTECK LTDA - FILIAL03 MS",
+      "value": 18000.0
+    },
+    {
+      "group": "PENTAGGONO INDUSTRIAL EXPORTADORA LTDA",
+      "value": 16200.0
+    },
+    {
+      "group": "EMBRAER S.A.",
+      "value": 16055.45
+    },
+    {
+      "group": "CASA DA MOEDA DO BRASIL",
+      "value": 13179.6
+    },
+    {
+      "group": "VIBRA ENERGIA S.A",
+      "value": 11768.64
+    },
+    {
+      "group": "OGATTI IMPORTS LTDA",
+      "value": 10799.6
+    },
+    {
+      "group": "AVFARMA ASSIST. SERV. FARMACEUTICOS LTDA",
+      "value": 10303.75
+    },
+    {
+      "group": "ESSENCIAL RIO DISTRIB. DE PROD. MEDICOS E HOSPITALARES LTDA",
+      "value": 9600.0
+    },
+    {
+      "group": "BIO 2 IMP. E COM DE MAT. MED. HOSP. LTDA",
+      "value": 9477.0
+    },
+    {
+      "group": "ARTE IMPLANTES MATERIAIS CIRURGICOS LTDA",
+      "value": 8700.0
+    },
+    {
+      "group": "MATHEUS MED COMERCIO DE ARTIGOS MEDICOS LTDA",
+      "value": 8000.0
+    },
+    {
+      "group": "MM DISTRIBUIDORA DE PRODUTOS E EQUIPAMENTOS LTDA",
+      "value": 7486.5
+    },
+    {
+      "group": "C K COMERCIO DE FERRAGENS LTDA",
+      "value": 6750.0
+    },
+    {
+      "group": "F & K BRASIL LTDA",
+      "value": 5441.64
+    },
+    {
+      "group": "REDE NACIONAL DE ENSINO E PESQUISA - RNP",
+      "value": 4948.54
+    },
+    {
+      "group": "L G COMERCIAL DE MAQUINAS AGRICOLAS LTDA",
+      "value": 4030.62
+    },
+    {
+      "group": "POSITIVO TECNOLOGIA S/A",
+      "value": 3543.03
+    },
+    {
+      "group": "DF MAQUINAS E FERRAMENTAS LTDA",
+      "value": 3426.0
+    },
+    {
+      "group": "WEBMED SOLUCOES EM SAUDE LTDA",
+      "value": 2884.17
+    },
+    {
+      "group": "INOVAMED HOSPITALAR LTDA",
+      "value": 2808.0
+    },
+    {
+      "group": "RIOMAR 2001 DISTRIBUIDORA DE ALIMENTOS E DESCARTAVEIS LTDA",
+      "value": 2808.0
+    },
+    {
+      "group": "ALEXSANDRO BARBOSA LAURENTINO",
+      "value": 1955.0
+    },
+    {
+      "group": "BRS SUPRIMENTOS CORPORATIVOS S/A",
+      "value": 1847.56
+    },
+    {
+      "group": "HS-CPQ TECNOLOGIA LTDA",
+      "value": 1842.0
+    },
+    {
+      "group": "CORPO ASTRAL COMERCIAL E INDUSTRIAL LTDA",
+      "value": 1840.0
+    },
+    {
+      "group": "CELINA COSTA DE SOUZA",
+      "value": 1733.28
+    },
+    {
+      "group": "OSTHEON COM.IMPORT.E EXPORT.DE PROD.HOSP.LTDA",
+      "value": 1711.03
+    },
+    {
+      "group": "G DE BORBA - MARISKAP",
+      "value": 1618.8
+    },
+    {
+      "group": "EDGAR HERRERA PEREIRA",
+      "value": 1497.6
+    },
+    {
+      "group": "JOSE BAUER DE ATAYDE & CIA LTDA",
+      "value": 1446.4
+    },
+    {
+      "group": "LAIBO MEDICAL PRODUTOS MEDICOS E HOSPITALARES LTDA",
+      "value": 1416.0
+    },
+    {
+      "group": "CLEBER NASCIMENTO DA ROSA EPP",
+      "value": 1300.0
+    },
+    {
+      "group": "MARINILDE BELFORT MATOS",
+      "value": 1260.0
+    },
+    {
+      "group": "JP COMERCIO DE PRODUTOS ALIMENTICIOS E SERVICOS EIRELI",
+      "value": 1178.0
+    },
+    {
+      "group": "R G XAVIER GUIMARAES LTDA",
+      "value": 970.0
+    },
+    {
+      "group": "DUME COMBUSTIVEIS BARRA DO GARCAS LTDA",
+      "value": 899.0
+    },
+    {
+      "group": "ANTONIO DE PAIVA COSTA",
+      "value": 884.76
+    },
+    {
+      "group": "VENTURA COMERCIO E SERVICOS DE AUTO LTDA",
+      "value": 825.0
+    },
+    {
+      "group": "WOLVES GROUP AND COLI INK BUSINESS LTDA",
+      "value": 760.0
+    },
+    {
+      "group": "ZENITE COMERCIO E SUPRIMENTOS DE INFORMATICA LTDA",
+      "value": 752.4
+    },
+    {
+      "group": "3MARIAS DISTRIBUICAO E SERVICOS LTDA",
+      "value": 700.0
+    },
+    {
+      "group": "WIDETECH AUTOMACAO LTDA",
+      "value": 700.0
+    },
+    {
+      "group": "MENMAR COMERCIO DE ALIMENTOS LTDA",
+      "value": 642.5
+    },
+    {
+      "group": "MEDTRONIC COMERCIAL LTDA.",
+      "value": 630.0
+    },
+    {
+      "group": "FORTBRAS AUTOPECAS S.A.",
+      "value": 622.08
+    },
+    {
+      "group": "50.500.312 LEANDRO PIMENTEL CORREA DE SA",
+      "value": 600.0
+    },
+    {
+      "group": "GS MIRANDA LTDA",
+      "value": 586.08
+    },
+    {
+      "group": "TERRA SUL EDITORA LTDA",
+      "value": 566.49
+    },
+    {
+      "group": "N&C COMERCIO E DISTRIBUICAO DE DESCARTAVEIS LTDA",
+      "value": 532.5
+    },
+    {
+      "group": "F C SILVA COMERCIO DE INFORMATICA",
+      "value": 528.0
+    },
+    {
+      "group": "COMPANHIA BRASILEIRA DE EDUC. E SIST. DE ENS. S.A - PR OP",
+      "value": 522.5
+    },
+    {
+      "group": "NUTRI ALIMENTOS DE NILOPOLIS COMERCIO ATACADISTA LTDA",
+      "value": 509.49
+    },
+    {
+      "group": "BAHIA CESTAS LTDA",
+      "value": 475.9
+    },
+    {
+      "group": "EDITORA MODERNA LTDA.",
+      "value": 439.56
+    },
+    {
+      "group": "SOLL -SERVICOS OBRAS E LOCACOES LTDA",
+      "value": 401.84
+    },
+    {
+      "group": "POSTO DE COMBUSTIVEL BECHI LTDA",
+      "value": 400.62
+    },
+    {
+      "group": "DANIEL ROSA LOPES 25949024893",
+      "value": 393.9
+    },
+    {
+      "group": "J NUNES DISTRIBUIDORA DE ALIMENTOS EIRELI",
+      "value": 370.8
+    },
+    {
+      "group": "JOSEFA DE SOUZA ABREU",
+      "value": 362.94
+    },
+    {
+      "group": "B2G MEDICAL COMERCIO DE PRODUTOS MEDICOS E CIRURGICOS LTDA",
+      "value": 361.0
+    },
+    {
+      "group": "TIGRAO AUTO POSTO EIRELI",
+      "value": 359.0
+    },
+    {
+      "group": "MOSKO LTDA EPP",
+      "value": 337.5
+    },
+    {
+      "group": "JUAREZ SILVA CABRAL",
+      "value": 315.0
+    },
+    {
+      "group": "V CALDI PEREIRA PECAS E SERVICOS DIESEL",
+      "value": 300.0
+    },
+    {
+      "group": "MAVI CONSTRUCOES - LTDA",
+      "value": 293.86
+    },
+    {
+      "group": "L. LUCIA KUHN E CIA LTDA EPP",
+      "value": 281.84
+    },
+    {
+      "group": "DELICIA DO NORTE COMERCIO, SERVICOS E REPRESENTACAO DE PRODU",
+      "value": 239.2
+    },
+    {
+      "group": "JF CENTRO AUTOMOTIVO LTDA",
+      "value": 207.25
+    },
+    {
+      "group": "IVANETE APARECIDA MIRANDA",
+      "value": 189.0
+    },
+    {
+      "group": "M SOUSA LIMA",
+      "value": 173.25
+    },
+    {
+      "group": "FARIAS SANTOS E FARIA ZAMPA LTDA",
+      "value": 167.99
+    },
+    {
+      "group": "VISAO DISTRIBUIDORA DE MEDICAMENTOS LTDA",
+      "value": 116.0
+    },
+    {
+      "group": "PROMOVENDO COM. E REPRES. DE MATERIAL HOSP. LTDA",
+      "value": 88.22
+    },
+    {
+      "group": "QUIBASA QUIMICA BASICA LTDA",
+      "value": 80.2
+    },
+    {
+      "group": "RE SOL COMERCIO DE FRUTAS E LEGUMES LTDA",
+      "value": 73.0
+    },
+    {
+      "group": "DAHRUJ MOTORS LTDA",
+      "value": 45.84
+    },
+    {
+      "group": "MEDITON FARMACEUTICA LTDA ME",
+      "value": 30.0
+    },
+    {
+      "group": "SERCIMAQ VENDA E ASSISTENCIA TECNICA DE MAQUINAS E MOTORES L",
+      "value": 20.0
+    },
+    {
+      "group": "EMPRES BRASILEIRA DE CORREIOS E TELEGRAFOS",
+      "value": 11.07
+    }
+  ],
+  "min_by_emitente": [
+    {
+      "group": "LABORATORIOS B.BRAUN S.A",
+      "value": 726081.6
+    },
+    {
+      "group": "XCMG BRASIL INDUSTRIA LTDA",
+      "value": 330000.0
+    },
+    {
+      "group": "CHEMYUNION LTDA",
+      "value": 307368.75
+    },
+    {
+      "group": "TMPRO COMERCIO DE ELETRO ELETRONICOS LTDA - MATRIZ",
+      "value": 82265.75
+    },
+    {
+      "group": "SIMCAUTO MECANICA E REPRESENTACOES LTDA",
+      "value": 55000.0
+    },
+    {
+      "group": "F C NICOLAU EQUIPAMENTOS PARA LABORATÓRIO LTDA.",
+      "value": 43499.99
+    },
+    {
+      "group": "PADTEC S/A",
+      "value": 29461.38
+    },
+    {
+      "group": "AURAMEDI FARMACEUTICA LTDA",
+      "value": 26881.2
+    },
+    {
+      "group": "HPL CONSTRUCAO, SEGURANCA E SERVICOS EIRELI",
+      "value": 20200.0
+    },
+    {
+      "group": "PENTAGGONO INDUSTRIAL EXPORTADORA LTDA",
+      "value": 16200.0
+    },
+    {
+      "group": "EMBRAER S.A.",
+      "value": 16055.45
+    },
+    {
+      "group": "CASA DA MOEDA DO BRASIL",
+      "value": 13179.6
+    },
+    {
+      "group": "OGATTI IMPORTS LTDA",
+      "value": 10799.6
+    },
+    {
+      "group": "ESSENCIAL RIO DISTRIB. DE PROD. MEDICOS E HOSPITALARES LTDA",
+      "value": 9600.0
+    },
+    {
+      "group": "MATHEUS MED COMERCIO DE ARTIGOS MEDICOS LTDA",
+      "value": 8000.0
+    },
+    {
+      "group": "MM DISTRIBUIDORA DE PRODUTOS E EQUIPAMENTOS LTDA",
+      "value": 7486.5
+    },
+    {
+      "group": "DENTECK LTDA - FILIAL03 MS",
+      "value": 7400.0
+    },
+    {
+      "group": "C K COMERCIO DE FERRAGENS LTDA",
+      "value": 6750.0
+    },
+    {
+      "group": "F & K BRASIL LTDA",
+      "value": 5441.64
+    },
+    {
+      "group": "FARMACE - INDUSTRIA QUIMICO FARMACEUTICA CEARENSE LTDA",
+      "value": 5100.0
+    },
+    {
+      "group": "REDE NACIONAL DE ENSINO E PESQUISA - RNP",
+      "value": 4948.54
+    },
+    {
+      "group": "DF MAQUINAS E FERRAMENTAS LTDA",
+      "value": 3426.0
+    },
+    {
+      "group": "INOVAMED HOSPITALAR LTDA",
+      "value": 2808.0
+    },
+    {
+      "group": "VIBRA ENERGIA S.A",
+      "value": 2208.0
+    },
+    {
+      "group": "ALEXSANDRO BARBOSA LAURENTINO",
+      "value": 1955.0
+    },
+    {
+      "group": "HS-CPQ TECNOLOGIA LTDA",
+      "value": 1842.0
+    },
+    {
+      "group": "CORPO ASTRAL COMERCIAL E INDUSTRIAL LTDA",
+      "value": 1840.0
+    },
+    {
+      "group": "CELINA COSTA DE SOUZA",
+      "value": 1733.28
+    },
+    {
+      "group": "EDGAR HERRERA PEREIRA",
+      "value": 1497.6
+    },
+    {
+      "group": "JOSE BAUER DE ATAYDE & CIA LTDA",
+      "value": 1446.4
+    },
+    {
+      "group": "LAIBO MEDICAL PRODUTOS MEDICOS E HOSPITALARES LTDA",
+      "value": 1416.0
+    },
+    {
+      "group": "JP COMERCIO DE PRODUTOS ALIMENTICIOS E SERVICOS EIRELI",
+      "value": 1178.0
+    },
+    {
+      "group": "MARINILDE BELFORT MATOS",
+      "value": 1099.8
+    },
+    {
+      "group": "MALTACARE DISTRIBUIDORA LTDA",
+      "value": 1040.6
+    },
+    {
+      "group": "DUME COMBUSTIVEIS BARRA DO GARCAS LTDA",
+      "value": 899.0
+    },
+    {
+      "group": "VENTURA COMERCIO E SERVICOS DE AUTO LTDA",
+      "value": 825.0
+    },
+    {
+      "group": "WOLVES GROUP AND COLI INK BUSINESS LTDA",
+      "value": 760.0
+    },
+    {
+      "group": "ZENITE COMERCIO E SUPRIMENTOS DE INFORMATICA LTDA",
+      "value": 752.4
+    },
+    {
+      "group": "WIDETECH AUTOMACAO LTDA",
+      "value": 700.0
+    },
+    {
+      "group": "EDITORA FTD S.A.",
+      "value": 693.12
+    },
+    {
+      "group": "MENMAR COMERCIO DE ALIMENTOS LTDA",
+      "value": 642.5
+    },
+    {
+      "group": "50.500.312 LEANDRO PIMENTEL CORREA DE SA",
+      "value": 600.0
+    },
+    {
+      "group": "GS MIRANDA LTDA",
+      "value": 586.08
+    },
+    {
+      "group": "F C SILVA COMERCIO DE INFORMATICA",
+      "value": 528.0
+    },
+    {
+      "group": "CLEBER NASCIMENTO DA ROSA EPP",
+      "value": 526.68
+    },
+    {
+      "group": "COMPANHIA BRASILEIRA DE EDUC. E SIST. DE ENS. S.A - PR OP",
+      "value": 522.5
+    },
+    {
+      "group": "NUTRI ALIMENTOS DE NILOPOLIS COMERCIO ATACADISTA LTDA",
+      "value": 509.49
+    },
+    {
+      "group": "BAHIA CESTAS LTDA",
+      "value": 475.9
+    },
+    {
+      "group": "OSTHEON COM.IMPORT.E EXPORT.DE PROD.HOSP.LTDA",
+      "value": 450.0
+    },
+    {
+      "group": "TERRA SUL EDITORA LTDA",
+      "value": 427.71
+    },
+    {
+      "group": "N&C COMERCIO E DISTRIBUICAO DE DESCARTAVEIS LTDA",
+      "value": 405.0
+    },
+    {
+      "group": "POSTO DE COMBUSTIVEL BECHI LTDA",
+      "value": 400.62
+    },
+    {
+      "group": "DANIEL ROSA LOPES 25949024893",
+      "value": 393.9
+    },
+    {
+      "group": "JOSEFA DE SOUZA ABREU",
+      "value": 362.94
+    },
+    {
+      "group": "B2G MEDICAL COMERCIO DE PRODUTOS MEDICOS E CIRURGICOS LTDA",
+      "value": 361.0
+    },
+    {
+      "group": "TIGRAO AUTO POSTO EIRELI",
+      "value": 359.0
+    },
+    {
+      "group": "WEBMED SOLUCOES EM SAUDE LTDA",
+      "value": 357.57
+    },
+    {
+      "group": "G DE BORBA - MARISKAP",
+      "value": 355.52
+    },
+    {
+      "group": "MOSKO LTDA EPP",
+      "value": 337.5
+    },
+    {
+      "group": "RIOMAR 2001 DISTRIBUIDORA DE ALIMENTOS E DESCARTAVEIS LTDA",
+      "value": 324.0
+    },
+    {
+      "group": "MAVI CONSTRUCOES - LTDA",
+      "value": 293.86
+    },
+    {
+      "group": "L. LUCIA KUHN E CIA LTDA EPP",
+      "value": 281.84
+    },
+    {
+      "group": "ARTE IMPLANTES MATERIAIS CIRURGICOS LTDA",
+      "value": 280.0
+    },
+    {
+      "group": "3MARIAS DISTRIBUICAO E SERVICOS LTDA",
+      "value": 260.0
+    },
+    {
+      "group": "DELICIA DO NORTE COMERCIO, SERVICOS E REPRESENTACAO DE PRODU",
+      "value": 239.2
+    },
+    {
+      "group": "MEDTRONIC COMERCIAL LTDA.",
+      "value": 210.0
+    },
+    {
+      "group": "JF CENTRO AUTOMOTIVO LTDA",
+      "value": 207.25
+    },
+    {
+      "group": "IVANETE APARECIDA MIRANDA",
+      "value": 189.0
+    },
+    {
+      "group": "FARIAS SANTOS E FARIA ZAMPA LTDA",
+      "value": 167.99
+    },
+    {
+      "group": "ANTONIO DE PAIVA COSTA",
+      "value": 155.0
+    },
+    {
+      "group": "EDITORA MODERNA LTDA.",
+      "value": 134.05
+    },
+    {
+      "group": "BIO 2 IMP. E COM DE MAT. MED. HOSP. LTDA",
+      "value": 120.0
+    },
+    {
+      "group": "VISAO DISTRIBUIDORA DE MEDICAMENTOS LTDA",
+      "value": 116.0
+    },
+    {
+      "group": "L G COMERCIAL DE MAQUINAS AGRICOLAS LTDA",
+      "value": 89.16
+    },
+    {
+      "group": "PROMOVENDO COM. E REPRES. DE MATERIAL HOSP. LTDA",
+      "value": 88.22
+    },
+    {
+      "group": "J NUNES DISTRIBUIDORA DE ALIMENTOS EIRELI",
+      "value": 71.2
+    },
+    {
+      "group": "JUAREZ SILVA CABRAL",
+      "value": 55.89
+    },
+    {
+      "group": "FORTBRAS AUTOPECAS S.A.",
+      "value": 54.72
+    },
+    {
+      "group": "DAHRUJ MOTORS LTDA",
+      "value": 45.84
+    },
+    {
+      "group": "AVFARMA ASSIST. SERV. FARMACEUTICOS LTDA",
+      "value": 44.16
+    },
+    {
+      "group": "V CALDI PEREIRA PECAS E SERVICOS DIESEL",
+      "value": 39.9
+    },
+    {
+      "group": "R G XAVIER GUIMARAES LTDA",
+      "value": 37.5
+    },
+    {
+      "group": "SOLL -SERVICOS OBRAS E LOCACOES LTDA",
+      "value": 34.1
+    },
+    {
+      "group": "MEDITON FARMACEUTICA LTDA ME",
+      "value": 30.0
+    },
+    {
+      "group": "BRS SUPRIMENTOS CORPORATIVOS S/A",
+      "value": 29.36
+    },
+    {
+      "group": "SERCIMAQ VENDA E ASSISTENCIA TECNICA DE MAQUINAS E MOTORES L",
+      "value": 20.0
+    },
+    {
+      "group": "RE SOL COMERCIO DE FRUTAS E LEGUMES LTDA",
+      "value": 15.64
+    },
+    {
+      "group": "POSITIVO TECNOLOGIA S/A",
+      "value": 12.73
+    },
+    {
+      "group": "QUIBASA QUIMICA BASICA LTDA",
+      "value": 10.8
+    },
+    {
+      "group": "M SOUSA LIMA",
+      "value": 3.36
+    },
+    {
+      "group": "EMPRES BRASILEIRA DE CORREIOS E TELEGRAFOS",
+      "value": 2.18
+    }
+  ],
+  "average_by_uf_emitente": [
+    {
+      "group": "RJ",
+      "value": 39468.44380952381
+    },
+    {
+      "group": "MG",
+      "value": 16581.925454545453
+    },
+    {
+      "group": "CE",
+      "value": 11792.572
+    },
+    {
+      "group": "DF",
+      "value": 11475.199999999999
+    },
+    {
+      "group": "MS",
+      "value": 9277.475
+    },
+    {
+      "group": "GO",
+      "value": 9010.296
+    },
+    {
+      "group": "SP",
+      "value": 4489.769481865285
+    },
+    {
+      "group": "RS",
+      "value": 4466.316086956522
+    },
+    {
+      "group": "PB",
+      "value": 3012.8050000000003
+    },
+    {
+      "group": "PR",
+      "value": 1261.6163636363638
+    },
+    {
+      "group": "SC",
+      "value": 768.5466666666666
+    },
+    {
+      "group": "BA",
+      "value": 475.9
+    },
+    {
+      "group": "PA",
+      "value": 457.27799999999996
+    },
+    {
+      "group": "MT",
+      "value": 426.9575
+    },
+    {
+      "group": "AM",
+      "value": 408.4113636363636
+    },
+    {
+      "group": "RO",
+      "value": 319.90999999999997
+    },
+    {
+      "group": "MA",
+      "value": 311.278
+    },
+    {
+      "group": "RN",
+      "value": 221.0
+    },
+    {
+      "group": "PE",
+      "value": 132.25666666666666
+    }
+  ]
+}

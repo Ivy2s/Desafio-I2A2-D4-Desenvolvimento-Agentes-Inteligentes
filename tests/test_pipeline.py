@@ -14,6 +14,7 @@ def test_pipeline_loads_zip_and_queries_without_machine_paths(tmp_path: Path):
 
     assert manager.query(operation="count", dataset="items")["result"] == 2
     assert manager.query(operation="aggregate", dataset="items", group_by="id", metric="value", aggregation="sum")["result"]
+    assert manager.query(operation="aggregate", dataset="items", metric="value", aggregation="sum")["result"] == [{"value": 30.0}]
 
 
 def test_pipeline_processes_provided_data_dictionary(tmp_path: Path):
@@ -32,3 +33,21 @@ def test_pipeline_processes_provided_data_dictionary(tmp_path: Path):
     assert manager.describe()["compras"]["descriptions"] == {
         "valor": "Valor total da compra"
     }
+
+
+def test_pipeline_ignores_generic_period_placeholder(tmp_path: Path):
+    csv_path = tmp_path / "items.csv"
+    csv_path.write_text("supplier,value\nAlfa,10\n", encoding="utf-8")
+    manager = DataManager(data_dir=str(tmp_path / "runtime"))
+    manager.load(str(csv_path))
+
+    result = manager.query(
+        operation="aggregate",
+        dataset="items",
+        periodo="periodo",
+        group_by="supplier",
+        metric="value",
+        aggregation="sum",
+    )
+
+    assert result["result"] == [{"supplier": "Alfa", "value": 10.0}]

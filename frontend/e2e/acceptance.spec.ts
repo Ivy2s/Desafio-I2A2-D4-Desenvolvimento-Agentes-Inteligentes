@@ -5,6 +5,7 @@ import { dirname, resolve } from 'node:path'
 
 const fixtureDir = resolve('e2e/fixtures')
 const zipPath = resolve('e2e/fixtures/dataset.zip')
+const evidenceDir = resolve('test-results/evidence')
 
 function ensureZip() {
   if (existsSync(zipPath)) return
@@ -13,6 +14,7 @@ function ensureZip() {
 }
 
 test.beforeAll(ensureZip)
+test.beforeEach(() => mkdirSync(evidenceDir, { recursive: true }))
 
 test('carrega ZIP real e disponibiliza a Interface B', async ({ page }) => {
   const requests: string[] = []
@@ -38,7 +40,7 @@ test('carrega ZIP real e disponibiliza a Interface B', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'O que você quer descobrir?' })).toBeVisible({ timeout: 120000 })
   await expect(page.locator('.sidebar-metrics dd').nth(0)).toHaveText('2')
   await expect(page.locator('.sidebar-metrics dd').nth(1)).toHaveText('7')
-  await page.screenshot({ path: '../deliverables/evidence/02-dataset-ready.png', fullPage: true })
+  await page.screenshot({ path: resolve(evidenceDir, '02-dataset-ready.png'), fullPage: true })
   expect(requests.some((request) => request.includes('POST http://127.0.0.1:18000/api/datasets'))).toBe(true)
   expect(errors).toEqual([])
 })
@@ -68,7 +70,7 @@ test('consulta real usa o endpoint do agente quando a IA está configurada', asy
   await queryRequest
   await expect(page.getByText('análise concluída')).toHaveCount(1, { timeout: 120000 })
   await expect(page.locator('.result-answer')).toContainText('4')
-  await page.screenshot({ path: '../deliverables/evidence/03-query-real.png', fullPage: true })
+  await page.screenshot({ path: resolve(evidenceDir, '03-query-real.png'), fullPage: true })
 })
 
 async function openRealWorkspace(page: import('@playwright/test').Page) {
@@ -94,7 +96,7 @@ test('resposta real de contagem', async ({ page }) => {
   await openRealWorkspace(page)
   const countResult = await askRealQuestion(page, 'Quantos registros existem no dataset compras?')
   await expect(countResult).toContainText('4')
-  await page.screenshot({ path: '../deliverables/evidence/03-query-count.png', fullPage: true })
+  await page.screenshot({ path: resolve(evidenceDir, '03-query-count.png'), fullPage: true })
 })
 
 test('resposta real em tabela e gráfico', async ({ page }) => {
@@ -104,7 +106,7 @@ test('resposta real em tabela e gráfico', async ({ page }) => {
   await expect(totalsResult).toContainText('Alfa')
   await expect(totalsResult.locator('table')).toBeVisible()
   await expect(totalsResult.locator('svg[role="img"]')).toBeVisible()
-  await page.screenshot({ path: '../deliverables/evidence/04-query-table-chart.png', fullPage: true })
+  await page.screenshot({ path: resolve(evidenceDir, '04-query-table-chart.png'), fullPage: true })
 })
 
 test('resposta real em lista tabular', async ({ page }) => {
@@ -113,12 +115,12 @@ test('resposta real em lista tabular', async ({ page }) => {
   await expect(listResult.locator('table')).toBeVisible()
   await expect(listResult).toContainText(/(?:2[.\s]500|2500)/)
   await expect(listResult).toContainText('Monitor')
-  await page.screenshot({ path: '../deliverables/evidence/05-query-list.png', fullPage: true })
+  await page.screenshot({ path: resolve(evidenceDir, '05-query-list.png'), fullPage: true })
 })
 
 test('quarta resposta real em dataset secundário', async ({ page }) => {
   await openRealWorkspace(page)
   const secondaryResult = await askRealQuestion(page, 'Quantos registros existem no dataset fornecedores?')
   await expect(secondaryResult).toContainText('3')
-  await page.screenshot({ path: '../deliverables/evidence/06-query-maximum.png', fullPage: true })
+  await page.screenshot({ path: resolve(evidenceDir, '06-query-maximum.png'), fullPage: true })
 })

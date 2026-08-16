@@ -8,6 +8,7 @@ from pipeline.csv_loader import CSVLoader
 from pipeline.data_dictionary import DataDictionary
 from pipeline.validator import DataValidator
 from pipeline.zip_handler import ZipHandler
+from services.config import MAX_QUERY_RESULT_ROWS
 
 
 class DataManager:
@@ -86,6 +87,24 @@ class DataManager:
 
         return self.dictionary
 
+    def planner_context(self) -> dict[str, dict]:
+        """Metadata minimo para uma geracao de plano, sem linhas ou amostras."""
+        if not self.dictionary:
+            self.load()
+        context = {}
+        for dataset, metadata in self.dictionary.items():
+            descriptions = {
+                column: description
+                for column, description in metadata.get("descriptions", {}).items()
+                if str(description).strip()
+            }
+            context[dataset] = {
+                "columns": list(metadata.get("columns", [])),
+                "types": metadata.get("dtypes", {}),
+                "descriptions": descriptions,
+            }
+        return context
+
     def query(
         self,
         operation: str,
@@ -95,6 +114,7 @@ class DataManager:
         metric: Optional[str] = None,
         aggregation: Optional[str] = None,
         sort: Optional[str] = None,
+        sort_direction: Optional[str] = None,
         limit: Optional[int] = None,
     ):
         if not self.datasets:
@@ -108,18 +128,37 @@ class DataManager:
 
         df = self.datasets[dataset].copy()
 
+        if limit is not None:
+            if isinstance(limit, bool) or not isinstance(limit, int) or limit < 1:
+                raise ValueError("limit deve ser um inteiro positivo")
+            if limit > MAX_QUERY_RESULT_ROWS:
+                raise ValueError(
+                    f"limit excede o máximo seguro de {MAX_QUERY_RESULT_ROWS}"
+                )
+
+        if sort_direction is not None:
+            normalized_direction = str(sort_direction).strip().lower()
+            if normalized_direction not in {"asc", "desc"}:
+                raise ValueError("sort_direction deve ser 'asc' ou 'desc'")
+        else:
+            normalized_direction = "desc"
+
         # ---------------------------------------------------------
         # FILTRO POR PERIODO
         # ---------------------------------------------------------
 
         if periodo:
             if "periodo" not in df.columns:
-                raise ValueError(
-                    f"O dataset '{dataset}' nao possui a coluna 'periodo'. "
-                    f"Colunas disponiveis: {list(df.columns)}"
-                )
+                if str(periodo).strip().lower() in {"periodo", "período", "period"}:
+                    periodo = None
+                else:
+                    raise ValueError(
+                        f"O dataset '{dataset}' nao possui a coluna 'periodo'. "
+                        f"Colunas disponiveis: {list(df.columns)}"
+                    )
 
-            df = df[df["periodo"].astype(str) == str(periodo)]
+            if periodo:
+                df = df[df["periodo"].astype(str) == str(periodo)]
 
         normalized_operation = operation.lower().strip()
 
@@ -140,6 +179,27 @@ class DataManager:
 
         if normalized_operation in {"list", "listar"}:
             effective_limit = limit if limit else 20
+            if sort:
+                if sort not in df.columns:
+                    raise ValueError(
+                        f"Coluna de ordenacao '{sort}' nao encontrada "
+                        f"no dataset '{dataset}'. "
+                        f"Colunas disponiveis: {list(df.columns)}"
+                    )
+                numeric_sort = _to_numeric(df[sort])
+                if numeric_sort.notna().all():
+                    df = df.assign(_sort_key=numeric_sort).sort_values(
+                        by="_sort_key",
+                        ascending=normalized_direction == "asc",
+                        kind="stable",
+                    ).drop(columns="_sort_key")
+                else:
+                    df = df.sort_values(
+                        by=sort,
+                        ascending=normalized_direction == "asc",
+                        key=lambda values: values.astype("string").str.casefold(),
+                        kind="stable",
+                    )
             rows = df.head(effective_limit).to_dict(
                 orient="records"
             )
@@ -163,11 +223,6 @@ class DataManager:
             "agrupamento",
         }:
 
-            if not group_by:
-                raise ValueError(
-                    "Para agregacao informe 'group_by'."
-                )
-
             if not metric:
                 raise ValueError(
                     "Para agregacao informe 'metric'."
@@ -178,7 +233,7 @@ class DataManager:
                     "Para agregacao informe 'aggregation'."
                 )
 
-            if group_by not in df.columns:
+            if group_by and group_by not in df.columns:
                 raise ValueError(
                     f"Coluna group_by '{group_by}' nao encontrada "
                     f"no dataset '{dataset}'. "
@@ -193,10 +248,7 @@ class DataManager:
                 )
 
             # Converte metric para numerico
-            metric_values = pd.to_numeric(
-                df[metric],
-                errors="coerce"
-            )
+            metric_values = _to_numeric(df[metric])
 
             df["_metric"] = metric_values
 
@@ -208,24 +260,36 @@ class DataManager:
                 "max": "max",
             }
 
-            aggregation = aggregation_map.get(
-                aggregation.lower(),
-                aggregation.lower()
-            )
-
-            grouped = (
-                df.groupby(
-                    group_by,
-                    dropna=False
-                )["_metric"]
-                .agg(aggregation)
-                .reset_index()
-                .rename(
-                    columns={
-                        "_metric": metric
-                    }
+            aggregation = aggregation_map.get(aggregation.lower(), aggregation.lower())
+            if aggregation not in aggregation_map.values():
+                raise ValueError(
+                    f"Agregacao '{aggregation}' nao suportada. "
+                    f"Use: {', '.join(aggregation_map)}"
                 )
-            )
+
+            if not metric_values.notna().any():
+                raise ValueError(
+                    f"A métrica '{metric}' não possui valores numéricos válidos."
+                )
+
+            # Valores ausentes não podem virar zero ou um ranking falso.
+            df = df[df["_metric"].notna()]
+
+            # Em um ranking de maior/menor valor, o corte unitário deve
+            # ordenar pela métrica, mesmo que o LLM tenha escolhido a dimensão.
+            if group_by and limit == 1 and aggregation in {"max", "min"}:
+                sort = metric
+                normalized_direction = "desc" if aggregation == "max" else "asc"
+
+            if group_by:
+                grouped = (
+                    df.groupby(group_by, dropna=False)["_metric"]
+                    .agg(aggregation)
+                    .reset_index()
+                    .rename(columns={"_metric": metric})
+                )
+            else:
+                grouped = pd.DataFrame([{metric: df["_metric"].agg(aggregation)}])
 
             # -----------------------------------------------------
             # ORDENAÇÃO
@@ -241,7 +305,7 @@ class DataManager:
 
                 grouped = grouped.sort_values(
                     by=sort,
-                    ascending=False
+                    ascending=normalized_direction == "asc",
                 )
 
             # -----------------------------------------------------
@@ -249,7 +313,7 @@ class DataManager:
             # -----------------------------------------------------
 
             total_rows = len(grouped)
-            if limit:
+            if limit is not None:
                 grouped = grouped.head(limit)
 
             return {
@@ -270,3 +334,15 @@ class DataManager:
             f"Operacao '{operation}' nao suportada. "
             f"Operacoes disponiveis: count, list, aggregate."
         )
+
+
+def _to_numeric(values: pd.Series) -> pd.Series:
+    """Converte decimais comuns, incluindo o formato brasileiro, para número."""
+    normalized = values.astype("string").str.strip().str.replace("R$", "", regex=False)
+    brazilian = normalized.str.contains(",", na=False)
+    normalized.loc[brazilian] = (
+        normalized.loc[brazilian]
+        .str.replace(".", "", regex=False)
+        .str.replace(",", ".", regex=False)
+    )
+    return pd.to_numeric(normalized, errors="coerce")

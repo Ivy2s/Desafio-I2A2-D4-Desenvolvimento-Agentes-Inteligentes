@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 
 from api.main import create_app
 from services.query_service import QueryResult
-from services.exceptions import UnknownToolError
+from services.exceptions import ProviderRateLimitError, UnknownToolError
 
 
 CSV = b"name,value\nalpha,10\nbeta,20\n"
@@ -295,6 +295,39 @@ def test_query_orchestration_error_has_stable_code(tmp_path):
     )
     assert response.status_code == 502
     assert response.json()["error"]["code"] == "unknown_tool"
+
+
+def test_query_rate_limit_preserves_provider_details(tmp_path):
+    app = create_app(str(tmp_path / "datasets"))
+    client = TestClient(app)
+    dataset_id = upload(client)["datasetId"]
+    app.state.query_service = SimpleNamespace(
+        query=lambda received_id, question: (_ for _ in ()).throw(
+            ProviderRateLimitError(
+                "Limite temporário do provedor atingido.",
+                provider="groq",
+                retry_after_seconds=4,
+                metadata={"remaining_tokens": "0"},
+            )
+        )
+    )
+
+    response = client.post(
+        f"/api/datasets/{dataset_id}/query",
+        json={"question": "consulta"},
+    )
+
+    assert response.status_code == 429
+    assert response.json()["error"] == {
+        "code": "provider_rate_limit",
+        "message": "Limite temporário do provedor atingido.",
+        "details": {
+            "provider": "groq",
+            "retryable": True,
+            "retry_after_seconds": 4,
+            "remaining_tokens": "0",
+        },
+    }
 
 
 def test_query_count_response_is_typed(tmp_path):

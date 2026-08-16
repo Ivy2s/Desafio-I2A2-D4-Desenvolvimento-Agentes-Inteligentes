@@ -1,6 +1,7 @@
+import unicodedata
 from typing import Optional, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from pipeline.data_manager import DataManager
 from services.config import MAX_QUERY_RESULT_ROWS
@@ -68,6 +69,14 @@ class DataQuery(BaseModel):
         )
     )
 
+    sort_direction: Optional[Literal["asc", "desc"]] = Field(
+        default=None,
+        description=(
+            "Direção da ordenação: asc para menores primeiro ou desc para "
+            "maiores primeiro. Use junto com sort."
+        ),
+    )
+
     limit: Optional[int] = Field(
         default=None,
         ge=1,
@@ -78,6 +87,73 @@ class DataQuery(BaseModel):
         )
     )
 
+    @field_validator("operation", mode="before")
+    @classmethod
+    def normalize_operation(cls, value: str) -> str:
+        normalized = _normalize_term(value)
+        return {
+            "contagem": "count",
+            "listar": "list",
+            "listagem": "list",
+            "agregacao": "aggregate",
+            "agrupamento": "aggregate",
+            "groupby": "aggregate",
+        }.get(normalized, normalized)
+
+    @field_validator("aggregation", mode="before")
+    @classmethod
+    def normalize_aggregation(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = _normalize_term(value)
+        return {
+            "media": "avg",
+            "media_aritmetica": "avg",
+            "soma": "sum",
+            "minimo": "min",
+            "maximo": "max",
+            "maior": "max",
+            "maximum": "max",
+            "menor": "min",
+        }.get(normalized, normalized)
+
+    @field_validator("limit", mode="before")
+    @classmethod
+    def normalize_limit(cls, value: int | str | None) -> int | None:
+        if value is None:
+            return value
+        if isinstance(value, bool):
+            raise ValueError("limit deve ser um inteiro positivo")
+        if isinstance(value, int):
+            return value
+        return int(value)
+
+    @field_validator("sort_direction", mode="before")
+    @classmethod
+    def normalize_sort_direction(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = _normalize_term(value)
+        return {
+            "crescente": "asc",
+            "ascending": "asc",
+            "decrescente": "desc",
+            "descending": "desc",
+        }.get(normalized, normalized)
+
+    @model_validator(mode="after")
+    def validate_plan_shape(self):
+        if self.operation == "aggregate" and (not self.metric or not self.aggregation):
+            raise ValueError("aggregate exige metric e aggregation")
+        if self.sort_direction and not self.sort:
+            raise ValueError("sort_direction exige sort")
+        return self
+
+
+def _normalize_term(value: str) -> str:
+    without_accents = unicodedata.normalize("NFKD", str(value)).encode("ascii", "ignore").decode()
+    return without_accents.lower().strip().replace("-", "_").replace(" ", "_")
+
 
 def query_data(query: DataQuery, manager: Optional[DataManager] = None):
     """
@@ -85,6 +161,14 @@ def query_data(query: DataQuery, manager: Optional[DataManager] = None):
     """
 
     data_manager = manager or DataManager()
+    # Alguns modelos confundem o nome de uma coluna de data com o valor do
+    # filtro especial `periodo`. Se o dataset nao possui essa coluna, remover
+    # apenas essa forma inequívoca de placeholder evita uma segunda geracao e
+    # preserva a semantica de consultar todo o dataset.
+    if query.periodo and query.dataset in data_manager.datasets:
+        columns = data_manager.datasets[query.dataset].columns
+        if "periodo" not in columns and query.periodo in columns:
+            query = query.model_copy(update={"periodo": None})
     effective_limit = query.limit
     if query.operation in {"list", "aggregate"}:
         effective_limit = min(query.limit or MAX_QUERY_RESULT_ROWS, MAX_QUERY_RESULT_ROWS)
@@ -97,6 +181,7 @@ def query_data(query: DataQuery, manager: Optional[DataManager] = None):
         metric=query.metric,
         aggregation=query.aggregation,
         sort=query.sort,
+        sort_direction=query.sort_direction,
         limit=effective_limit,
     )
 

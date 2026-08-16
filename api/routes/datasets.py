@@ -14,6 +14,13 @@ from services.exceptions import (
     AgentExecutionError,
     DatasetNotFoundError,
     InvalidDatasetError,
+    ProviderQuotaExhaustedError,
+    ProviderRateLimitError,
+    ProviderUnavailableError,
+    ProviderAuthError,
+    ProviderNotConfiguredError,
+    ProviderTimeoutError,
+    QueryInvalidError,
     UnsupportedFileError,
     UploadTooLargeError,
 )
@@ -76,6 +83,7 @@ def get_dataset(request: Request, dataset_id: UUID) -> DatasetDetailResponse:
         404: {"model": ErrorResponse},
         422: {"model": ErrorResponse},
         502: {"model": ErrorResponse},
+        429: {"model": ErrorResponse},
         503: {"model": ErrorResponse},
     },
 )
@@ -96,5 +104,26 @@ def query_dataset(
         ) from error
     except AIUnavailableError as error:
         raise HTTPException(status_code=503, detail={"code": error.code, "message": str(error)}) from error
+    except ProviderRateLimitError as error:
+        raise HTTPException(
+            status_code=429,
+            detail={"code": error.code, "message": str(error), "details": error.details()},
+        ) from error
+    except ProviderQuotaExhaustedError as error:
+        raise HTTPException(
+            status_code=429,
+            detail={"code": error.code, "message": str(error), "details": error.details()},
+        ) from error
+    except ProviderUnavailableError as error:
+        raise HTTPException(
+            status_code=503,
+            detail={"code": error.code, "message": str(error), "details": error.details()},
+        ) from error
+    except (ProviderAuthError, ProviderNotConfiguredError) as error:
+        raise HTTPException(status_code=503, detail={"code": error.code, "message": str(error), "details": error.details()}) from error
+    except ProviderTimeoutError as error:
+        raise HTTPException(status_code=504, detail={"code": error.code, "message": str(error), "details": error.details()}) from error
+    except QueryInvalidError as error:
+        raise HTTPException(status_code=422, detail={"code": error.code, "message": str(error)}) from error
     except AgentExecutionError as error:
         raise HTTPException(status_code=502, detail={"code": error.code, "message": str(error)}) from error
