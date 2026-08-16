@@ -371,6 +371,3 @@ teste são ignorados pelo Git. Não faça commit de chaves ou credenciais.
 Consulte também `docs/arquitetura.md`, `docs/api_contract.md` e
 `docs/challenge_compliance_matrix.md`.
 
-## 📄 Documento do Projeto
-
-Nota: Referenciar o report final
