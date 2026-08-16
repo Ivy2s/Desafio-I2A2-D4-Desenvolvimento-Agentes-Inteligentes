@@ -11,7 +11,8 @@
 </table>
 
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
-![LanChan}(https://img.shields.io/badge/https%3A%2F%2Fwww.streamlinehq.com%2Ficons%2Fdownload%2Flangchain--31088)
+![LanChan}(https://img.shields.io/badge/langchan-3670A0?style=for-the-badge&logo=langchan&logoColor=ffdd54)
+
 
 
 
