@@ -129,12 +129,21 @@ export function WorkspaceQuery({ workspace, onBack }: WorkspaceQueryProps) {
 
           <div className="sidebar-datasets">
             <p>datasets carregados</p>
-            {workspace.datasets.map((dataset: WorkspaceDataset) => (
-              <span key={dataset.datasetId}>
-                <i className="csv-mark">CSV</i>
-                {dataset.name}
-              </span>
-            ))}
+            {workspace.datasets.flatMap((dataset: WorkspaceDataset) =>
+              dataset.fileNames.length > 0
+                ? dataset.fileNames.map((fileName) => (
+                    <span key={`${dataset.datasetId}-${fileName}`}>
+                      <i className="csv-mark">CSV</i>
+                      {fileName}
+                    </span>
+                  ))
+                : [
+                    <span key={dataset.datasetId}>
+                      <i className="csv-mark">CSV</i>
+                      {dataset.name}
+                    </span>,
+                  ],
+            )}
           </div>
 
           <div className="sidebar-note">

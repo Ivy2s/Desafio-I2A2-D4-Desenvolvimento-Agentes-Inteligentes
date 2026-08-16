@@ -20,6 +20,7 @@ class ColumnMetadata(BaseModel):
 
 class DatasetMetadata(BaseModel):
     name: str
+    fileNames: list[str]
     rows: int
     columnCount: int
     columns: list[ColumnMetadata]

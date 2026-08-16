@@ -35,6 +35,18 @@ def test_pipeline_processes_provided_data_dictionary(tmp_path: Path):
     }
 
 
+def test_pipeline_loads_uppercase_csvs_from_zip(tmp_path: Path):
+    zip_path = tmp_path / "dataset.zip"
+    with ZipFile(zip_path, "w") as archive:
+        archive.writestr("ITEMS.CSV", "id,value\n1,10\n2,20\n")
+
+    manager = DataManager(data_dir=str(tmp_path / "runtime"))
+    manager.load(str(zip_path))
+
+    assert set(manager.datasets) == {"items"}
+    assert manager.query(operation="count", dataset="items")["result"] == 2
+
+
 def test_pipeline_ignores_generic_period_placeholder(tmp_path: Path):
     csv_path = tmp_path / "items.csv"
     csv_path.write_text("supplier,value\nAlfa,10\n", encoding="utf-8")

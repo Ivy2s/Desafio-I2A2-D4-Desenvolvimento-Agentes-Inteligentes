@@ -2,6 +2,7 @@
 export interface WorkspaceDataset {
   datasetId: string
   name: string
+  fileNames: string[]
   rows: number
   columns: number
 }

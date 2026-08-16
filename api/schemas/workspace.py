@@ -12,6 +12,7 @@ class WorkspaceCreateRequest(BaseModel):
 class DatasetReference(BaseModel):
     datasetId: UUID
     name: str
+    fileNames: list[str] = Field(default_factory=list)
     rows: int
     columns: int
 

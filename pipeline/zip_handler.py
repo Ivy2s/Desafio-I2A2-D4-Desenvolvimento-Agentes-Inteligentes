@@ -98,11 +98,9 @@ class ZipHandler:
                 with archive.open(member, "r") as source, target.open("wb") as output:
                     while chunk := source.read(1024 * 1024):
                         written += len(chunk)
-                        if written > max_member_bytes:
-                            raise ZipLimitExceededError(
-                                f"A entrada excede o tamanho máximo: {member.filename}"
-                            )
                         output.write(chunk)
-                extracted_files.append(str(target))
+                if target.suffix.lower() == ".csv":
+                    extracted_files.append(str(target))
 
         return extracted_files
+              

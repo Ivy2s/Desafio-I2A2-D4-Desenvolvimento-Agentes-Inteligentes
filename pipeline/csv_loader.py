@@ -21,7 +21,9 @@ class CSVLoader:
             raise FileNotFoundError(f"Diretorio nao encontrado: {directory}")
 
         datasets: dict[str, pd.DataFrame] = {}
-        for csv_file in base_path.rglob("*.csv"):
+        for csv_file in base_path.rglob("*"):
+            if not csv_file.is_file() or csv_file.suffix.lower() != ".csv":
+                continue
             if csv_file.is_symlink():
                 raise ValueError(f"Link simbólico não permitido: {csv_file}")
             dataset_name = csv_file.stem.lower()

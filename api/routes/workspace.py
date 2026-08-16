@@ -74,6 +74,7 @@ def get_workspace(request: Request, workspace_id: UUID) -> WorkspaceResponse:
                     DatasetReference(
                         datasetId=dataset_id,
                         name=metadata["datasets"][0]["name"] if metadata["datasets"] else "unknown",
+                        fileNames=[item["name"] for item in metadata["datasets"]],
                         rows=metadata["summary"]["rows"],
                         columns=metadata["summary"]["columns"],
                     )
@@ -122,6 +123,7 @@ def add_dataset_to_workspace(
                     DatasetReference(
                         datasetId=did,
                         name=metadata["datasets"][0]["name"] if metadata["datasets"] else "unknown",
+                        fileNames=[item["name"] for item in metadata["datasets"]],
                         rows=metadata["summary"]["rows"],
                         columns=metadata["summary"]["columns"],
                     )
@@ -171,6 +173,7 @@ def remove_dataset_from_workspace(
                     DatasetReference(
                         datasetId=did,
                         name=metadata["datasets"][0]["name"] if metadata["datasets"] else "unknown",
+                        fileNames=[item["name"] for item in metadata["datasets"]],
                         rows=metadata["summary"]["rows"],
                         columns=metadata["summary"]["columns"],
                     )

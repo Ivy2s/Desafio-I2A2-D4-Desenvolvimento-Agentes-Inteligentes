@@ -75,8 +75,24 @@ export function DatasetManager({ workspace, onLoadAnother, onQueryReady }: Datas
             <ul>
                 {currentWorkspace.datasets.map((dataset: WorkspaceDataset) => (
                   <li key={dataset.datasetId} className="dataset-item">
-                    <span className="dataset-name">{dataset.name}</span>
-                    <span className="dataset-meta">{dataset.rows.toLocaleString('pt-BR')} registros</span>
+                    <div className="dataset-item__header">
+                      <span className="dataset-name">
+                        {dataset.fileNames.length > 1
+                          ? `${dataset.fileNames.length} arquivos CSV`
+                          : dataset.name}
+                      </span>
+                      <span className="dataset-meta">{dataset.rows.toLocaleString('pt-BR')} registros</span>
+                    </div>
+                    {dataset.fileNames.length > 1 && (
+                      <ul className="dataset-item__files" aria-label="Arquivos CSV deste upload">
+                        {dataset.fileNames.map((fileName) => (
+                          <li key={fileName}>
+                            <span className="csv-mark">CSV</span>
+                            {fileName}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </li>
                 ))}
             </ul>

@@ -54,8 +54,8 @@ class DataManager:
         """Lê o dicionário opcional fornecido no ZIP sem tratá-lo como dataset."""
         candidates = [
             path
-            for path in self.data_dir.rglob("*.csv")
-            if path.stem.lower() in CSVLoader.DICTIONARY_FILENAMES
+            for path in self.data_dir.rglob("*")
+            if path.is_file() and path.suffix.lower() == ".csv" and path.stem.lower() in CSVLoader.DICTIONARY_FILENAMES
         ]
         if not candidates:
             return {}

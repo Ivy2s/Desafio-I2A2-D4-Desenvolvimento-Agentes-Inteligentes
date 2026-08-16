@@ -96,6 +96,7 @@ class DatasetService:
         datasets = [
             {
                 "name": name,
+                "fileNames": list(session.manager.datasets.keys()),
                 "rows": info["rows"],
                 "columnCount": len(info["columns"]),
                 "columns": [

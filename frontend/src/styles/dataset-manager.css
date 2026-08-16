@@ -32,12 +32,18 @@
 
 .dataset-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.5rem;
   padding: 0.75rem 1rem;
   background: var(--color-background);
   border-radius: 6px;
   border-left: 3px solid var(--color-primary);
+}
+
+.dataset-item__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .dataset-name {
@@ -46,6 +52,23 @@
 }
 
 .dataset-meta {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.dataset-item__files {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dataset-item__files li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 0.85rem;
   color: var(--color-text-secondary);
 }
