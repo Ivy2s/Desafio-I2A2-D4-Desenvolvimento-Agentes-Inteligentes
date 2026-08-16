@@ -11,7 +11,9 @@
 </table>
 
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
-![LangChan](https://img.shields.io/badge/langchan--learn-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white)
+![Endpoint Badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fwww.streamlinehq.com%2Ficons%2Fdownload%2Flangchain--31088)
+
+
 
 ## 📖 Visão Geral
 
