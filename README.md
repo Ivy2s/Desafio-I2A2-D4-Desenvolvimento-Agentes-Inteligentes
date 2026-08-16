@@ -326,7 +326,7 @@ npm run e2e
 
 As consultas E2E reais consomem quota do provedor configurado. Screenshots, traces e resultados temporários são gravados em `frontend/test-results/`.
 
-## Solução de problemas
+## 📌Solução de problemas
 
 ### Chave ausente ou provider inválido
 
