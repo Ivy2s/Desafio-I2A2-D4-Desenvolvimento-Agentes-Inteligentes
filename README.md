@@ -30,7 +30,7 @@ Construir texto
 ## 🛠️ Arquitetura
 
             ┌─────────────────────┐
-            │   **INTERFACE A**   │
+            │   INTERFACE A       │
             │ Upload de ZIP       │
             └──────────┬──────────┘
                        ↓
