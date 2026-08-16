@@ -24,7 +24,8 @@ Demonstrar como a **inteligência agêntica** pode ser utilizada para transforma
 ---
 ## 💻 Frameworks e Ferramentas
 
-O projeto foi desenvolvido em **Python**, **LangChain**, **Pydantic AI**
+O projeto foi desenvolvido em **Python**, **LangChain**, **Pydantic AI**.
+
 Nota: Listar outras tecnologias e frameworks utilizados
 
 
